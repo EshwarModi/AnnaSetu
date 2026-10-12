@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('403 - Access Forbidden')}">
+    <title>403 - Access Forbidden</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <main class="main-content">
+        <div class="error-page">
+            <div class="error-badge">403</div>
+            <h1 class="error-title">Access Forbidden</h1>
+            <p class="error-desc" th:text="${errorMessage}">
+                You do not have the required permissions or role authorities to view this protected resource.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a th:href="@{/}" class="btn btn-primary">Return to Home</a>
+                <a th:href="@{/login}" class="btn btn-outline" sec:authorize="isAnonymous()">Sign In</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

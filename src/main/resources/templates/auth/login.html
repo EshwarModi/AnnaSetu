@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Sign In - AnnaSetu')}">
+    <title>Sign In - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <main class="main-content">
+        <div class="container">
+            <div class="auth-wrapper">
+                <div class="auth-card">
+                    <div class="auth-header">
+                        <span class="badge" style="background-color: var(--color-primary-light); color: var(--color-primary); margin-bottom: 0.75rem;">
+                            AnnaSetu Account Access
+                        </span>
+                        <h1 class="auth-title">Welcome Back</h1>
+                        <p class="auth-subtitle">Sign in to manage food donation bookings and organization slots</p>
+                    </div>
+
+                    <!-- Contextual Status Alerts -->
+                    <div th:if="${loginError}" class="alert alert-danger">
+                        <span class="alert-icon">&#9888;</span>
+                        <span th:text="${loginError}">Invalid email or password. Please try again.</span>
+                    </div>
+
+                    <div th:if="${logoutMessage}" class="alert alert-info">
+                        <span class="alert-icon">&#9432;</span>
+                        <span th:text="${logoutMessage}">You have been safely signed out.</span>
+                    </div>
+
+                    <div th:if="${registeredMessage}" class="alert alert-success">
+                        <span class="alert-icon">&#10004;</span>
+                        <span th:text="${registeredMessage}">Account created successfully! Please sign in.</span>
+                    </div>
+
+                    <div th:if="${orgPendingMessage}" class="alert alert-warning">
+                        <span class="alert-icon">&#9888;</span>
+                        <span th:text="${orgPendingMessage}">Registration submitted! Account is awaiting admin approval.</span>
+                    </div>
+
+                    <!-- Login Form -->
+                    <form th:action="@{/login}" method="post">
+                        <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                        <div class="form-group">
+                            <label for="email" class="form-label">Email Address</label>
+                            <input type="email" id="email" name="email" class="form-control"
+                                   placeholder="e.g. rahul.sharma@example.com" required autofocus />
+                        </div>
+
+                        <div class="form-group">
+                            <label for="password" class="form-label">Password</label>
+                            <input type="password" id="password" name="password" class="form-control"
+                                   placeholder="Enter your password" required />
+                        </div>
+
+                        <div class="form-group" style="display: flex; justify-content: space-between; align-items: center; margin-top: 0.5rem;">
+                            <div class="form-check">
+                                <input type="checkbox" name="remember-me" id="remember-me" class="form-check-input" />
+                                <label for="remember-me" class="form-check-label">Remember me on this device</label>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary btn-block" style="padding: 0.75rem; font-size: 1rem; margin-top: 0.75rem;">
+                            Sign In to AnnaSetu
+                        </button>
+                    </form>
+
+                    <div class="auth-footer">
+                        <p style="margin-bottom: 0.5rem;">Don't have an account yet?</p>
+                        <p>
+                            <a th:href="@{/register/donor}">Register as a Donor</a> &bull;
+                            <a th:href="@{/register/organization}">Onboard an NGO</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

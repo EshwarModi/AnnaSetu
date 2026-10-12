@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Donor Dashboard - AnnaSetu')}">
+    <title>Donor Dashboard - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Dashboard Header Banner -->
+    <section class="dashboard-header">
+        <div class="dashboard-header-container">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                        Welcome, <span th:text="${donor != null ? donor.fullName : 'Valued Donor'}">Rahul Sharma</span>!
+                    </h1>
+                    <span class="badge badge-veg" style="font-weight: 700;">DONOR</span>
+                </div>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.35rem;">
+                    <span th:text="${donor != null ? donor.city : 'Your City'}">Pune</span> &bull;
+                    <span th:text="${donor != null ? donor.phone : ''}">+91 98111 22233</span> &bull;
+                    <span>Celebrate your special occasions by sponsoring meals for those in need</span>
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                <a th:href="@{/search}" class="btn btn-primary" style="font-size: 0.95rem;">
+                    &#128269; Find Organizations &amp; Book Slots
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <!-- Quick Stats Cards -->
+        <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 2.25rem;">
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--primary-color);">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Upcoming Sponsorships
+                </div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--primary-color); margin: 0.25rem 0;"
+                     th:text="${#lists.size(upcomingBookings)}">0</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Active upcoming meal bookings</div>
+            </div>
+
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--forest-green);">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Past &amp; Fulfilled Meals
+                </div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--forest-green); margin: 0.25rem 0;"
+                     th:text="${#lists.size(pastBookings)}">0</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Historical meal donations</div>
+            </div>
+
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--secondary-color);">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Cancellation Window
+                </div>
+                <div style="font-size: 1.6rem; font-weight: 800; color: var(--secondary-color); margin: 0.4rem 0;">
+                    12 Hours Cutoff
+                </div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Release capacity in advance for kitchens</div>
+            </div>
+        </div>
+
+        <!-- Section 1: Upcoming Active Bookings -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">Upcoming Food Sponsorships</h2>
+            <p class="section-subtitle">Your reserved meal donation dates scheduled with partner institutions</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(upcomingBookings)}" class="card" style="padding: 2.5rem; text-align: center; margin-bottom: 2.5rem;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#127858;</div>
+            <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin-bottom: 0.35rem;">
+                No Upcoming Meal Donations
+            </h3>
+            <p style="color: var(--muted-color); font-size: 0.925rem; max-width: 500px; margin: 0 auto 1.5rem auto;">
+                You don't have any active meal reservations right now. Turn your upcoming birthday, anniversary, or festival into a feast of hope!
+            </p>
+            <a th:href="@{/search}" class="btn btn-primary">
+                Browse Verified Centers &rarr;
+            </a>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(upcomingBookings)}" class="data-table-wrapper" style="margin-bottom: 2.5rem;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Organization</th>
+                        <th>Date &amp; Meal</th>
+                        <th>Occasion</th>
+                        <th>Attendees &amp; Menu</th>
+                        <th>Status</th>
+                        <th style="min-width: 140px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${upcomingBookings}">
+                        <td style="font-weight: 700; color: var(--primary-color);" th:text="${'#BK-' + b.id}">#BK-1</td>
+                        <td>
+                            <strong th:text="${b.slot.organization.name}">Asha Kiran Home</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);"
+                                  th:text="${b.slot.organization.area + ', ' + b.slot.organization.city}">Kothrud, Pune</span><br/>
+                            <a th:href="@{/organizations/{id}(id=${b.slot.organization.id})}" style="font-size: 0.8rem; color: var(--primary-color);">View Center &rarr;</a>
+                        </td>
+                        <td>
+                            <strong th:text="${b.slot.slotDate}">2026-10-25</strong><br/>
+                            <span class="badge" th:text="${b.slot.mealSlot}">LUNCH</span>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: #fef3c7; color: #92400e;" th:text="${b.occasion}">BIRTHDAY</span>
+                        </td>
+                        <td style="max-width: 280px;">
+                            <div style="font-weight: 600; font-size: 0.85rem;" th:text="${b.peopleCount + ' estimated guests'}">50 guests</div>
+                            <div style="font-size: 0.825rem; color: var(--dark-light); margin-top: 0.2rem;" th:text="${b.foodDescription}">Festive vegetarian banquet</div>
+                        </td>
+                        <td>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700;">
+                                PENDING ORG CONFIRMATION
+                            </span>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-veg" style="font-weight: 700;">
+                                CONFIRMED
+                            </span>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center;">
+                                <!-- View / Print Receipt Button -->
+                                <a th:href="@{/donor/bookings/{id}/receipt(id=${b.id})}" class="btn btn-sm btn-outline"
+                                   style="font-size: 0.8rem;" title="View and Print Official Receipt">
+                                    &#128438; Receipt
+                                </a>
+
+                                <!-- Cancel Action if within cutoff window -->
+                                <div th:if="${cancellableMap.get(b.id)}">
+                                    <form th:action="@{/donor/bookings/{id}/cancel(id=${b.id})}" method="post"
+                                          onsubmit="return confirm('Are you sure you want to cancel this booking? The slot will be released back to the platform.');">
+                                        <button type="submit" class="btn btn-sm btn-outline"
+                                                style="color: #dc2626; border-color: #fca5a5; font-size: 0.8rem;">
+                                            &#10006; Cancel
+                                        </button>
+                                    </form>
+                                </div>
+                                <div th:if="${!cancellableMap.get(b.id)}">
+                                    <span class="badge" style="background-color: #f3f4f6; color: #6b7280; font-size: 0.75rem;"
+                                          title="Cancellations are locked 12 hours before meal start to allow kitchen planning">
+                                        Locked (&lt;12h)
+                                    </span>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2: Historical / Past Bookings -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">Donation History</h2>
+            <p class="section-subtitle">Your completed and past meal sponsorship records</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(pastBookings)}" class="alert alert-info" style="margin-bottom: 2rem;">
+            <span>&#9432;</span>
+            <span>No historical donation records yet. Once past events conclude, they will be archived here.</span>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(pastBookings)}" class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Organization</th>
+                        <th>Date &amp; Meal</th>
+                        <th>Occasion</th>
+                        <th>Menu Description</th>
+                        <th>Status</th>
+                        <th>Receipt</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${pastBookings}">
+                        <td style="font-weight: 700; color: var(--muted-color);" th:text="${'#BK-' + b.id}">#BK-1</td>
+                        <td>
+                            <strong th:text="${b.slot.organization.name}">Asha Kiran Home</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${b.slot.organization.city}">Pune</span>
+                        </td>
+                        <td>
+                            <span th:text="${b.slot.slotDate}">2026-09-10</span><br/>
+                            <span class="badge" th:text="${b.slot.mealSlot}">LUNCH</span>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: #fef3c7; color: #92400e;" th:text="${b.occasion}">ANNIVERSARY</span>
+                        </td>
+                        <td style="max-width: 320px;" th:text="${b.foodDescription}">Puri bhaji, paneer gravy, and gulab jamun</td>
+                        <td>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge" style="background-color: #dcfce7; color: #166534; font-weight: 700;">
+                                &#10004; COMPLETED
+                            </span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" class="badge" style="background-color: #f3f4f6; color: #6b7280;">
+                                CANCELLED
+                            </span>
+                            <span th:if="${b.status.name() == 'REJECTED'}" class="badge badge-nonveg">
+                                REJECTED
+                            </span>
+                            <span th:if="${b.status.name() == 'CONFIRMED' or b.status.name() == 'PENDING'}" class="badge" th:text="${b.status}">
+                                PAST
+                            </span>
+                        </td>
+                        <td>
+                            <a th:href="@{/donor/bookings/{id}/receipt(id=${b.id})}" class="btn btn-sm btn-outline"
+                               style="font-size: 0.8rem;" title="View and Print Receipt">
+                                &#128438; Receipt
+                            </a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

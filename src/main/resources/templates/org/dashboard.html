@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Organization Dashboard - AnnaSetu')}">
+    <title>Organization Dashboard - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Status Banner: Pending vs Approved -->
+    <div class="main-content" style="padding-top: 1.5rem; padding-bottom: 0;">
+        <!-- PENDING STATUS BANNER -->
+        <div th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).PENDING}"
+             class="alert"
+             style="background-color: #fffbeb; border: 1px solid #fde68a; border-left: 5px solid #d97706; border-radius: var(--radius-md); padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="font-size: 1.75rem; color: #d97706; line-height: 1;">&#9888;</div>
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.35rem; flex-wrap: wrap;">
+                    <strong style="color: #92400e; font-size: 1.05rem;">Account Verification Pending</strong>
+                    <span class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700;">PENDING ADMIN APPROVAL</span>
+                </div>
+                <p style="color: #78350f; font-size: 0.925rem; margin: 0; line-height: 1.5;">
+                    Your institution registration is currently undergoing administrative verification. During this review phase,
+                    <strong>calendar slot creation and donor bookings are restricted</strong>. You can review and update your profile information
+                    at any time.
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/org/profile}" class="btn btn-sm btn-outline" style="border-color: #d97706; color: #92400e; white-space: nowrap;">
+                    Review Profile
+                </a>
+            </div>
+        </div>
+
+        <!-- APPROVED STATUS BANNER -->
+        <div th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}"
+             class="alert"
+             style="background-color: #f0fdf4; border: 1px solid #bbf7d0; border-left: 5px solid #16a34a; border-radius: var(--radius-md); padding: 1rem 1.5rem; display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1.5rem;">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <span style="font-size: 1.5rem; color: #16a34a;">&#10004;</span>
+                <div>
+                    <strong style="color: #166534; font-size: 0.975rem;">Verified Partner Organization</strong>
+                    <span style="color: #15803d; font-size: 0.875rem; margin-left: 0.5rem;">Your institution is approved and visible to donors on AnnaSetu.</span>
+                </div>
+            </div>
+            <span class="badge badge-veg" style="font-weight: 700;">APPROVED</span>
+        </div>
+
+        <!-- REJECTED STATUS BANNER -->
+        <div th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).REJECTED}"
+             class="alert alert-error" style="margin-bottom: 1.5rem;">
+            <span>&#10060;</span>
+            <div>
+                <strong>Registration Not Approved</strong> &mdash;
+                <span>Your application was not approved. Please review your profile or contact administrator support.</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Header with Actions -->
+    <section class="dashboard-header" style="margin-top: 0;">
+        <div class="dashboard-header-container">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                        <span th:text="${org != null ? org.name : 'Organization Workspace'}">Asha Kiran Home</span>
+                    </h1>
+                    <span class="badge badge-primary" th:text="${org != null ? org.type : 'SHELTER'}">ORPHANAGE</span>
+                </div>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.35rem;">
+                    <span th:text="${org != null ? org.area + ', ' + org.city : 'Location'}">Pune</span> &bull;
+                    <span th:text="${org != null ? org.peopleServed + ' daily beneficiaries' : ''}">65 people</span> &bull;
+                    <span th:text="${org != null ? org.foodPreference : 'VEG'}">VEG</span>
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                <a th:href="@{/org/profile}" class="btn btn-outline" style="font-size: 0.9rem;">
+                    &#9998; Edit Profile
+                </a>
+                <div th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}">
+                    <a th:href="@{/org/slots}" class="btn btn-primary" style="font-size: 0.9rem;">
+                        &#128197; Manage Slots & Availability
+                    </a>
+                </div>
+                <div th:if="${org != null and org.approvalStatus != T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}">
+                    <button type="button" class="btn btn-secondary" disabled style="opacity: 0.6; cursor: not-allowed;" title="Requires Admin Approval">
+                        &#128274; Slots Locked (Pending)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <!-- Quick Stats Grid -->
+        <div class="grid grid-4" style="margin-bottom: 2rem;">
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--primary-color);">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Upcoming Slots
+                </div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--dark-color); margin: 0.25rem 0;"
+                     th:text="${upcomingSlotsCount}">0</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Configured meal windows</div>
+            </div>
+
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--secondary-color);">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Booked Slots
+                </div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--secondary-color); margin: 0.25rem 0;"
+                     th:text="${bookedSlotsCount}">0</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Slots with active donors</div>
+            </div>
+
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--forest-green);">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Daily Beneficiaries
+                </div>
+                <div style="font-size: 2rem; font-weight: 800; color: var(--forest-green); margin: 0.25rem 0;"
+                     th:text="${org != null ? org.peopleServed : 0}">65</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Residents served daily</div>
+            </div>
+
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid #3b82f6;">
+                <div style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600; text-transform: uppercase;">
+                    Dietary Compliance
+                </div>
+                <div style="font-size: 1.5rem; font-weight: 800; color: #1e40af; margin: 0.5rem 0;"
+                     th:text="${org != null ? org.foodPreference : 'VEG'}">VEG</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Kitchen requirement</div>
+            </div>
+        </div>
+
+        <!-- Two Column Layout: Profile Overview & Quick Actions -->
+        <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 2rem;">
+            <!-- Profile Snapshot Card (Spans 2 columns on desktop) -->
+            <div class="card" style="grid-column: span 2; padding: 1.75rem;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.25rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem;">
+                    <div>
+                        <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin: 0;">
+                            Institutional Profile
+                        </h3>
+                        <p style="font-size: 0.85rem; color: var(--muted-color); margin: 0.25rem 0 0 0;">
+                            Official address and contact details shown to prospective meal donors
+                        </p>
+                    </div>
+                    <a th:href="@{/org/profile}" class="btn btn-sm btn-outline">Edit Details</a>
+                </div>
+
+                <div class="grid grid-2" style="gap: 1.25rem;" th:if="${org != null}">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Address & Location</span>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; color: var(--dark-color);" th:text="${org.address}">123 Hope Street</p>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.875rem; color: var(--dark-light);" th:text="${org.area + ', ' + org.city + ' - ' + org.pincode}">Kothrud, Pune - 411038</p>
+                    </div>
+
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Contact Coordinator</span>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.95rem; font-weight: 600; color: var(--dark-color);" th:text="${org.contactPerson}">Sunita Deshmukh</p>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.875rem; color: var(--dark-light);" th:text="${org.phone}">+91 98220 12345</p>
+                    </div>
+                </div>
+
+                <div style="margin-top: 1.25rem; padding-top: 1rem; border-top: 1px dashed var(--border-color);" th:if="${org != null and org.description != null}">
+                    <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Mission & Overview</span>
+                    <p style="margin: 0.35rem 0 0 0; font-size: 0.925rem; line-height: 1.5; color: var(--dark-light);" th:text="${org.description}">
+                        Dedicated to care and rehabilitation.
+                    </p>
+                </div>
+            </div>
+
+            <!-- Quick Slot Shortcuts Card -->
+            <div class="card" style="padding: 1.75rem; display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.5rem 0;">
+                        Calendar Operations
+                    </h3>
+                    <p style="font-size: 0.875rem; color: var(--muted-color); line-height: 1.5; margin-bottom: 1.25rem;">
+                        Publish upcoming availability so donors can book meal sponsorships on their birthdays or special occasions.
+                    </p>
+
+                    <div style="background-color: var(--cream-bg); border-radius: var(--radius-sm); padding: 1rem; margin-bottom: 1.25rem;">
+                        <div style="font-size: 0.85rem; font-weight: 600; color: var(--dark-color); margin-bottom: 0.25rem;">Capacity Modes:</div>
+                        <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.825rem; color: var(--dark-light); line-height: 1.6;">
+                            <li><strong>Capacity 1:</strong> Exclusive single-donor feast.</li>
+                            <li><strong>Capacity 2:</strong> Shared between two donors.</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}">
+                    <a th:href="@{/org/slots}" class="btn btn-primary" style="width: 100%; text-align: center;">
+                        Go to Slot Manager &rarr;
+                    </a>
+                </div>
+                <div th:if="${org != null and org.approvalStatus != T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}">
+                    <div style="font-size: 0.85rem; color: #b45309; text-align: center; font-style: italic;">
+                        Slot publishing will unlock upon administrator approval.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Today's Sponsored Meals -->
+        <div th:if="${!#lists.isEmpty(todayBookings)}" class="card"
+             style="padding: 1.5rem; border-top: 4px solid var(--forest-green); background-color: #f0fdf4; margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h2 style="font-size: 1.35rem; font-weight: 800; color: #166534; margin: 0;">
+                        &#127858; Today's Sponsored Meals &mdash; <span th:text="${#temporals.format(today, 'EEEE, MMMM d, yyyy')}"></span>
+                    </h2>
+                    <p style="font-size: 0.875rem; color: #15803d; margin: 0.2rem 0 0 0;">
+                        Active meal events scheduled for today at your institution
+                    </p>
+                </div>
+                <span class="badge badge-veg" style="font-weight: 700; font-size: 0.85rem; padding: 0.35rem 0.75rem;">
+                    &#128197; TODAY'S HIGHLIGHT
+                </span>
+            </div>
+
+            <div class="grid grid-2" style="gap: 1rem;">
+                <div th:each="tb : ${todayBookings}" class="card" style="padding: 1.25rem; background-color: var(--color-white); border: 1px solid #bbf7d0;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                        <div>
+                            <span class="badge badge-primary" style="font-size: 0.85rem;" th:text="${tb.slot.mealSlot}">LUNCH</span>
+                            <span class="badge" style="background-color: #fef3c7; color: #92400e; margin-left: 0.35rem;" th:text="${tb.occasion}">BIRTHDAY</span>
+                        </div>
+                        <span th:if="${tb.status.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e;">PENDING</span>
+                        <span th:if="${tb.status.name() == 'CONFIRMED'}" class="badge badge-veg">CONFIRMED</span>
+                        <span th:if="${tb.status.name() == 'COMPLETED'}" class="badge" style="background-color: #e0e7ff; color: #3730a3;">&#10004; FULFILLED</span>
+                    </div>
+
+                    <div style="margin-bottom: 0.75rem;">
+                        <strong style="font-size: 1.05rem; color: var(--dark-color);" th:text="${tb.donor.fullName}">Rahul Sharma</strong>
+                        <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;" th:text="${tb.donor.phone}">+91 98111 22233</span>
+                    </div>
+
+                    <p style="font-size: 0.875rem; color: var(--dark-light); line-height: 1.5; margin: 0 0 1rem 0;" th:text="${tb.foodDescription}">
+                        Festive vegetarian menu
+                    </p>
+
+                    <!-- Today Actions -->
+                    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        <form th:if="${tb.status.name() == 'PENDING'}" th:action="@{/org/bookings/{id}/confirm(id=${tb.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-primary">&#10004; Confirm</button>
+                        </form>
+                        <form th:if="${tb.status.name() == 'CONFIRMED'}" th:action="@{/org/bookings/{id}/complete(id=${tb.id})}" method="post" style="display: inline;">
+                            <button type="submit" class="btn btn-sm btn-outline" style="color: #16a34a; border-color: #86efac;">&#10004; Mark Served / Complete</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Section: Calendar-Style Schedule Grouped by Date -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1.25rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">Calendar Schedule Grouped by Date</h2>
+            <p class="section-subtitle">Chrono-chronological view of upcoming meal sponsorships at your center</p>
+        </div>
+
+        <div th:if="${#maps.isEmpty(upcomingBookingsByDate)}" class="alert alert-info" style="margin-bottom: 2rem;">
+            <span>&#9432;</span>
+            <span>No upcoming meal sponsorships scheduled on the calendar yet. Publish availability slots to begin accepting bookings!</span>
+        </div>
+
+        <div th:if="${!#maps.isEmpty(upcomingBookingsByDate)}" style="display: flex; flex-direction: column; gap: 1.5rem; margin-bottom: 2.5rem;">
+            <div th:each="entry : ${upcomingBookingsByDate}" class="card" style="padding: 1.5rem; border-left: 5px solid var(--primary-color);">
+                <!-- Date Header -->
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.75rem; flex-wrap: wrap; gap: 0.5rem;">
+                    <div style="display: flex; align-items: center; gap: 0.75rem;">
+                        <div style="font-size: 1.5rem;">&#128197;</div>
+                        <div>
+                            <strong style="font-size: 1.15rem; color: var(--dark-color);"
+                                    th:text="${#temporals.format(entry.key, 'EEEE, MMMM d, yyyy')}">Monday, Oct 25, 2026</strong>
+                            <span th:if="${entry.key.isEqual(today)}" class="badge badge-veg" style="margin-left: 0.5rem;">TODAY</span>
+                            <span th:if="${entry.key.isEqual(today.plusDays(1))}" class="badge" style="background-color: #fef3c7; color: #92400e; margin-left: 0.5rem;">TOMORROW</span>
+                        </div>
+                    </div>
+                    <span style="font-size: 0.85rem; color: var(--muted-color); font-weight: 600;"
+                          th:text="${#lists.size(entry.value) + ' meal sponsorship(s)'}">1 meal sponsorship</span>
+                </div>
+
+                <!-- Cards under this date -->
+                <div class="grid grid-2" style="gap: 1rem;">
+                    <div th:each="b : ${entry.value}" style="background-color: #fafaf9; border-radius: var(--radius-sm); padding: 1rem; border: 1px solid var(--border-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                            <div>
+                                <span class="badge" th:text="${b.slot.mealSlot}">LUNCH</span>
+                                <span class="badge" style="background-color: #fef3c7; color: #92400e; margin-left: 0.25rem;" th:text="${b.occasion}">BIRTHDAY</span>
+                            </div>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e;">PENDING</span>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-veg">CONFIRMED</span>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge" style="background-color: #e0e7ff; color: #3730a3;">COMPLETED</span>
+                        </div>
+
+                        <div style="font-size: 0.95rem; font-weight: 700; color: var(--dark-color); margin-bottom: 0.25rem;">
+                            <span th:text="${b.donor.fullName}">Rahul Sharma</span>
+                            <span style="font-size: 0.8rem; font-weight: normal; color: var(--muted-color); margin-left: 0.35rem;" th:text="${b.donor.phone}">+91 98111 22233</span>
+                        </div>
+
+                        <p style="font-size: 0.825rem; color: var(--dark-light); line-height: 1.4; margin: 0 0 0.75rem 0;" th:text="${b.foodDescription}">
+                            Food details
+                        </p>
+
+                        <!-- Action Buttons -->
+                        <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                            <form th:if="${b.status.name() == 'PENDING'}" th:action="@{/org/bookings/{id}/confirm(id=${b.id})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-primary" style="font-size: 0.75rem; padding: 0.25rem 0.5rem;">&#10004; Confirm</button>
+                            </form>
+                            <form th:if="${b.status.name() == 'CONFIRMED'}" th:action="@{/org/bookings/{id}/complete(id=${b.id})}" method="post" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-outline" style="color: #16a34a; border-color: #86efac; font-size: 0.75rem; padding: 0.25rem 0.5rem;">&#10004; Complete</button>
+                            </form>
+                            <form th:if="${b.status.name() == 'PENDING' or b.status.name() == 'CONFIRMED'}" th:action="@{/org/bookings/{id}/reject(id=${b.id})}" method="post"
+                                  onsubmit="return confirm('Reject booking and release slot?');" style="display: inline;">
+                                <button type="submit" class="btn btn-sm btn-outline" style="color: #dc2626; border-color: #fca5a5; font-size: 0.75rem; padding: 0.25rem 0.5rem;">Reject</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Comprehensive Bookings Data Table -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">All Meal Sponsorships Registry</h2>
+            <p class="section-subtitle">Tabular listing of all donor bookings for record keeping</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(bookings)}" class="alert alert-info">
+            <span>&#9432;</span>
+            <span>No upcoming donor meal sponsorships have been reserved yet. Once you publish availability slots, bookings will appear here.</span>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(bookings)}" class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Donor Details</th>
+                        <th>Date & Meal</th>
+                        <th>Occasion</th>
+                        <th>Menu / Description</th>
+                        <th>Status</th>
+                        <th style="min-width: 170px;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${bookings}">
+                        <td style="font-weight: 700; color: var(--primary-color);" th:text="${'#BK-' + b.id}">#BK-1</td>
+                        <td>
+                            <strong th:text="${b.donor.fullName}">Rahul Sharma</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${b.donor.phone}">+91 98111 22233</span>
+                        </td>
+                        <td>
+                            <strong th:text="${b.slot.slotDate}">2026-10-15</strong><br/>
+                            <span class="badge" th:text="${b.slot.mealSlot}">LUNCH</span>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: #fef3c7; color: #92400e;" th:text="${b.occasion}">BIRTHDAY</span>
+                        </td>
+                        <td style="max-width: 320px;" th:text="${b.foodDescription}">Festive vegetarian lunch</td>
+                        <td>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700;">PENDING</span>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-veg" style="font-weight: 700;">CONFIRMED</span>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge" style="background-color: #e0e7ff; color: #3730a3; font-weight: 700;">COMPLETED</span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" class="badge" style="background-color: #f3f4f6; color: #6b7280;">CANCELLED</span>
+                            <span th:if="${b.status.name() == 'REJECTED'}" class="badge badge-nonveg">REJECTED</span>
+                        </td>
+                        <td>
+                            <!-- PENDING: Confirm or Reject -->
+                            <div th:if="${b.status.name() == 'PENDING'}" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <form th:action="@{/org/bookings/{id}/confirm(id=${b.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-primary" style="padding: 0.35rem 0.65rem; font-size: 0.8rem;">
+                                        &#10004; Confirm
+                                    </button>
+                                </form>
+                                <form th:action="@{/org/bookings/{id}/reject(id=${b.id})}" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Are you sure you want to reject this booking? The slot capacity will be released.');">
+                                    <button type="submit" class="btn btn-sm btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; color: #dc2626; border-color: #fca5a5;">
+                                        &#10006; Reject
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- CONFIRMED: Mark Completed or Reject -->
+                            <div th:if="${b.status.name() == 'CONFIRMED'}" style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                                <form th:action="@{/org/bookings/{id}/complete(id=${b.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; color: #16a34a; border-color: #86efac;">
+                                        &#10004; Complete
+                                    </button>
+                                </form>
+                                <form th:action="@{/org/bookings/{id}/reject(id=${b.id})}" method="post" style="display: inline;"
+                                      onsubmit="return confirm('Cancel and reject this confirmed booking? The slot will be released back.');">
+                                    <button type="submit" class="btn btn-sm btn-outline" style="padding: 0.35rem 0.65rem; font-size: 0.8rem; color: #dc2626; border-color: #fca5a5;">
+                                        Reject
+                                    </button>
+                                </form>
+                            </div>
+
+                            <!-- Finished States -->
+                            <span th:if="${b.status.name() == 'COMPLETED'}" style="color: #16a34a; font-size: 0.85rem; font-weight: 600;">
+                                &#10004; Fulfilled
+                            </span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" style="color: var(--muted-color); font-size: 0.85rem;">
+                                Released by donor
+                            </span>
+                            <span th:if="${b.status.name() == 'REJECTED'}" style="color: #dc2626; font-size: 0.85rem;">
+                                Released
+                            </span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

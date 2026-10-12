@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+    <!-- 1. Reusable Alert Component Fragment -->
+    <div th:fragment="alert(type, message)" th:if="${message}"
+         class="alert"
+         th:classappend="${type == 'success' ? 'alert-success' : (type == 'danger' or type == 'error' ? 'alert-danger' : (type == 'warning' ? 'alert-warning' : 'alert-info'))}">
+        <span class="alert-icon" th:text="${type == 'success' ? '&#10004;' : (type == 'danger' or type == 'error' ? '&#9888;' : (type == 'warning' ? '&#9888;' : '&#9432;'))}">&#9432;</span>
+        <span th:text="${message}">Alert message text</span>
+    </div>
+
+    <!-- 2. Reusable Slot Status Badge Fragment -->
+    <div th:fragment="slot-badge(mealSlot, capacity, bookedCount)" style="display: inline-flex; align-items: center; gap: 0.35rem;">
+        <span class="badge"
+              style="background-color: #f3f4f6; color: #374151;"
+              th:text="${mealSlot}">LUNCH</span>
+        
+        <!-- Slot is completely booked -->
+        <span th:if="${bookedCount >= capacity}"
+              class="badge badge-slot-booked">
+            Booked
+        </span>
+
+        <!-- Slot is partially booked -->
+        <span th:if="${bookedCount > 0 and bookedCount < capacity}"
+              class="badge badge-slot-partial"
+              th:text="${(capacity - bookedCount) + ' Left'}">
+            1 Left
+        </span>
+
+        <!-- Slot is completely open -->
+        <span th:if="${bookedCount == 0}"
+              class="badge badge-slot-free">
+            Available
+        </span>
+    </div>
+
+    <!-- 3. Reusable Organization Card Fragment -->
+    <article th:fragment="organization-card(org)" class="card">
+        <div class="card-header">
+            <div>
+                <h3 class="org-card-title" th:text="${org.name}">Asha Kiran Children Home</h3>
+                <p style="font-size: 0.85rem; color: var(--color-gray-500); margin-top: 0.25rem;">
+                    <span th:text="${org.area + ', ' + org.city}">Deccan, Pune</span>
+                </p>
+            </div>
+            <span class="badge"
+                  th:classappend="${org.type.name() == 'ORPHANAGE' ? 'badge-orphanage' : (org.type.name() == 'OLD_AGE_HOME' ? 'badge-old-age' : (org.type.name() == 'SHELTER' ? 'badge-shelter' : 'badge-other'))}"
+                  th:text="${org.type}">ORPHANAGE</span>
+        </div>
+
+        <div class="card-body">
+            <p class="org-card-desc" th:text="${org.description}">
+                Home providing shelter, education, and nutrition to orphaned and destitute children.
+            </p>
+
+            <ul class="org-meta-list">
+                <li class="org-meta-item">
+                    <strong>Capacity:</strong>
+                    <span th:text="${org.peopleServed + ' residents served daily'}">65 people</span>
+                </li>
+                <li class="org-meta-item">
+                    <strong>Dietary Rule:</strong>
+                    <span class="badge"
+                          th:classappend="${org.foodPreference.name() == 'VEG' ? 'badge-veg' : 'badge-both'}"
+                          th:text="${org.foodPreference}">VEG</span>
+                </li>
+                <li class="org-meta-item">
+                    <strong>Contact:</strong>
+                    <span th:text="${org.contactPerson}">Sunita Deshmukh</span>
+                </li>
+            </ul>
+        </div>
+
+        <div class="card-footer">
+            <span style="font-size: 0.8rem; color: var(--color-secondary); font-weight: 600;">
+                &#10003; Verified Partner
+            </span>
+            <a th:href="@{'/organizations/' + ${org.id}}" class="btn btn-primary btn-sm">
+                View &amp; Book
+            </a>
+        </div>
+    </article>
+
+    <!-- 4. Reusable Pagination Component Fragment -->
+    <nav th:fragment="pagination(currentPage, totalPages, baseUrl)" th:if="${totalPages != null and totalPages > 1}" aria-label="Page navigation">
+        <ul class="pagination">
+            <!-- Previous Page Link -->
+            <li class="pagination-item">
+                <a th:href="@{${baseUrl}(page=${currentPage - 1})}"
+                   class="pagination-link"
+                   th:classappend="${currentPage <= 1} ? 'disabled' : ''"
+                   aria-label="Previous">
+                    &laquo;
+                </a>
+            </li>
+
+            <!-- Page Number Links -->
+            <li class="pagination-item" th:each="pageNum : ${#numbers.sequence(1, totalPages)}">
+                <a th:href="@{${baseUrl}(page=${pageNum})}"
+                   class="pagination-link"
+                   th:classappend="${pageNum == currentPage} ? 'active' : ''"
+                   th:text="${pageNum}">
+                    1
+                </a>
+            </li>
+
+            <!-- Next Page Link -->
+            <li class="pagination-item">
+                <a th:href="@{${baseUrl}(page=${currentPage + 1})}"
+                   class="pagination-link"
+                   th:classappend="${currentPage >= totalPages} ? 'disabled' : ''"
+                   aria-label="Next">
+                    &raquo;
+                </a>
+            </li>
+        </ul>
+    </nav>
+
+</body>
+</html>

@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Admin Console - AnnaSetu')}">
+    <title>Admin Console - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Admin Header Banner -->
+    <section class="dashboard-header">
+        <div class="dashboard-header-container">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                        Platform Administration Console
+                    </h1>
+                    <span class="badge" style="background-color: #fee2e2; color: #991b1b; font-weight: 800;">
+                        MASTER ADMIN ACCESS
+                    </span>
+                </div>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.35rem;">
+                    Platform-wide analytics, institutional partner vetting, booking surveillance, and user access control
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+                <a th:href="@{/search}" class="btn btn-outline" style="font-size: 0.9rem;">
+                    &#128269; Public Discovery View
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <!-- Analytics & Quick Metrics Grid -->
+        <div class="grid grid-4" style="gap: 1.25rem; margin-bottom: 2.25rem;">
+            <!-- 1. Registered Donors -->
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--primary-color);">
+                <div style="font-size: 0.8rem; color: var(--muted-color); font-weight: 700; text-transform: uppercase;">
+                    Total Donors
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--dark-color); margin: 0.2rem 0;"
+                     th:text="${stats.totalDonors}">5</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Registered donor accounts</div>
+            </div>
+
+            <!-- 2. Organizations Overview -->
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--forest-green);">
+                <div style="font-size: 0.8rem; color: var(--muted-color); font-weight: 700; text-transform: uppercase;">
+                    Organizations
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--forest-green); margin: 0.2rem 0;"
+                     th:text="${stats.approvedOrgsCount}">8</div>
+                <div style="font-size: 0.8rem; color: var(--dark-light);">
+                    <span style="font-weight: 700;" th:text="${stats.approvedOrgsCount}">8</span> Approved &bull;
+                    <span style="color: #d97706; font-weight: 700;" th:text="${stats.pendingOrgsCount}">0</span> Pending
+                </div>
+            </div>
+
+            <!-- 3. Total Bookings -->
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid var(--secondary-color);">
+                <div style="font-size: 0.8rem; color: var(--muted-color); font-weight: 700; text-transform: uppercase;">
+                    Total Bookings
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: var(--secondary-color); margin: 0.2rem 0;"
+                     th:text="${stats.totalBookings}">12</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Platform-wide meal sponsorships</div>
+            </div>
+
+            <!-- 4. Published Slots -->
+            <div class="card" style="padding: 1.25rem; border-top: 4px solid #3b82f6;">
+                <div style="font-size: 0.8rem; color: var(--muted-color); font-weight: 700; text-transform: uppercase;">
+                    Active Meal Slots
+                </div>
+                <div style="font-size: 2.2rem; font-weight: 800; color: #1e40af; margin: 0.2rem 0;"
+                     th:text="${stats.totalSlots}">720</div>
+                <div style="font-size: 0.8rem; color: var(--muted-color);">Configured meal windows</div>
+            </div>
+        </div>
+
+        <!-- Section 1: Pending Organization Vetting Queue -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.5rem;">
+                <div>
+                    <h2 class="section-title" style="font-size: 1.4rem;">
+                        Pending Organization Vetting Queue
+                        <span class="badge" style="background-color: #fef3c7; color: #92400e; margin-left: 0.5rem;"
+                              th:text="${stats.pendingOrgsCount + ' PENDING'}">0 PENDING</span>
+                    </h2>
+                    <p class="section-subtitle">Newly registered charitable institutions requiring background verification before publishing slots</p>
+                </div>
+            </div>
+        </div>
+
+        <div th:if="${#lists.isEmpty(pendingOrgs)}" class="alert alert-success" style="margin-bottom: 2.5rem;">
+            <span>&#10004;</span>
+            <span>The partner review queue is clear! All registered institutions have been processed.</span>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(pendingOrgs)}" class="data-table-wrapper" style="margin-bottom: 2.5rem;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Org ID</th>
+                        <th>Institution Details</th>
+                        <th>Type &amp; Food</th>
+                        <th>Location</th>
+                        <th>Coordinator</th>
+                        <th>Daily Residents</th>
+                        <th style="min-width: 280px;">Vetting Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${pendingOrgs}">
+                        <td style="font-weight: 700; color: var(--primary-color);" th:text="${'#ORG-' + p.id}">#ORG-10</td>
+                        <td>
+                            <strong style="font-size: 0.95rem;" th:text="${p.name}">Shelter Name</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${p.user.email}">contact@shelter.org</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-shelter" th:text="${p.type}">SHELTER</span><br/>
+                            <span class="badge badge-veg" style="margin-top: 0.25rem;" th:text="${p.foodPreference}">VEG</span>
+                        </td>
+                        <td>
+                            <span th:text="${p.address}">123 Main St</span><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${p.area + ', ' + p.city + ' - ' + p.pincode}">Pune - 411038</span>
+                        </td>
+                        <td>
+                            <strong th:text="${p.contactPerson}">Pooja Patil</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${p.phone}">+91 98220 33445</span>
+                        </td>
+                        <td style="font-weight: 700;" th:text="${p.peopleServed + ' people'}">50 people</td>
+                        <td>
+                            <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                <!-- Approve Button -->
+                                <form th:action="@{/admin/organizations/{id}/approve(id=${p.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-primary" style="width: 100%; font-size: 0.825rem;">
+                                        &#10004; Approve Organization
+                                    </button>
+                                </form>
+
+                                <!-- Reject Form with Reason Input -->
+                                <form th:action="@{/admin/organizations/{id}/reject(id=${p.id})}" method="post"
+                                      onsubmit="return confirm('Are you sure you want to reject this organization application?');"
+                                      style="display: flex; gap: 0.35rem;">
+                                    <input type="text" name="reason" placeholder="Reason for rejection..." required
+                                           class="form-control" style="font-size: 0.775rem; padding: 0.25rem 0.5rem; height: auto;" />
+                                    <button type="submit" class="btn btn-sm btn-outline"
+                                            style="color: #dc2626; border-color: #fca5a5; font-size: 0.8rem; white-space: nowrap;">
+                                        &#10006; Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 2: Recent Platform Booking Surveillance -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">Recent Meal Bookings (Live Stream)</h2>
+            <p class="section-subtitle">Real-time surveillance of food donation bookings across all partner organizations</p>
+        </div>
+
+        <div th:if="${#lists.isEmpty(recentBookings)}" class="alert alert-info" style="margin-bottom: 2.5rem;">
+            <span>&#9432;</span>
+            <span>No bookings have been made on the platform yet.</span>
+        </div>
+
+        <div th:if="${!#lists.isEmpty(recentBookings)}" class="data-table-wrapper" style="margin-bottom: 2.5rem;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Booking ID</th>
+                        <th>Donor</th>
+                        <th>Partner Organization</th>
+                        <th>Meal Schedule</th>
+                        <th>Occasion</th>
+                        <th>Attendees &amp; Menu</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="b : ${recentBookings}">
+                        <td style="font-weight: 700; color: var(--primary-color);" th:text="${'#BK-' + b.id}">#BK-1</td>
+                        <td>
+                            <strong th:text="${b.donor.fullName}">Rahul Sharma</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${b.donor.city}">Mumbai</span>
+                        </td>
+                        <td>
+                            <strong th:text="${b.slot.organization.name}">Asha Kiran Home</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${b.slot.organization.city}">Pune</span>
+                        </td>
+                        <td>
+                            <strong th:text="${b.slot.slotDate}">2026-10-25</strong><br/>
+                            <span class="badge" th:text="${b.slot.mealSlot}">LUNCH</span>
+                        </td>
+                        <td>
+                            <span class="badge" style="background-color: #fef3c7; color: #92400e;" th:text="${b.occasion}">BIRTHDAY</span>
+                        </td>
+                        <td style="max-width: 250px;">
+                            <span style="font-size: 0.85rem; font-weight: 600;" th:text="${b.peopleCount + ' guests'}">65 guests</span><br/>
+                            <span style="font-size: 0.8rem; color: var(--dark-light);" th:text="${b.foodDescription}">Festive vegetarian feast</span>
+                        </td>
+                        <td>
+                            <span th:if="${b.status.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700;">PENDING</span>
+                            <span th:if="${b.status.name() == 'CONFIRMED'}" class="badge badge-veg" style="font-weight: 700;">CONFIRMED</span>
+                            <span th:if="${b.status.name() == 'COMPLETED'}" class="badge" style="background-color: #e0e7ff; color: #3730a3; font-weight: 700;">COMPLETED</span>
+                            <span th:if="${b.status.name() == 'CANCELLED'}" class="badge" style="background-color: #f3f4f6; color: #6b7280;">CANCELLED</span>
+                            <span th:if="${b.status.name() == 'REJECTED'}" class="badge badge-nonveg">REJECTED</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 3: All Registered Partner Organizations -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">
+                All Partner Organizations Directory (<span th:text="${stats.totalOrganizations}">8</span>)
+            </h2>
+            <p class="section-subtitle">Complete registry of approved, pending, and rejected charitable institutions</p>
+        </div>
+
+        <div class="data-table-wrapper" style="margin-bottom: 2.5rem;">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Org ID</th>
+                        <th>Institution Name</th>
+                        <th>Type</th>
+                        <th>City / Area</th>
+                        <th>Dietary Rule</th>
+                        <th>Residents</th>
+                        <th>Status / Rejection Reason</th>
+                        <th>Management Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="o : ${allOrgs}">
+                        <td style="font-weight: 700;" th:text="${'#ORG-' + o.id}">#ORG-1</td>
+                        <td>
+                            <strong th:text="${o.name}">Asha Kiran</strong><br/>
+                            <span style="font-size: 0.8rem; color: var(--muted-color);" th:text="${o.contactPerson + ' (' + o.phone + ')'}">Coordinator</span>
+                        </td>
+                        <td><span class="badge" th:text="${o.type}">ORPHANAGE</span></td>
+                        <td th:text="${o.area + ', ' + o.city}">Kothrud, Pune</td>
+                        <td><span class="badge badge-veg" th:text="${o.foodPreference}">VEG</span></td>
+                        <td th:text="${o.peopleServed + ' daily'}">65 daily</td>
+                        <td>
+                            <span th:if="${o.approvalStatus.name() == 'APPROVED'}" class="badge badge-veg">&#10004; APPROVED</span>
+                            <span th:if="${o.approvalStatus.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e;">PENDING</span>
+                            <div th:if="${o.approvalStatus.name() == 'REJECTED'}">
+                                <span class="badge badge-nonveg">&#10006; REJECTED</span>
+                                <div th:if="${o.rejectionReason != null}" style="font-size: 0.775rem; color: #991b1b; margin-top: 0.25rem;"
+                                     th:text="${'Reason: ' + o.rejectionReason}">Reason note</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.35rem; flex-wrap: wrap;">
+                                <form th:if="${o.approvalStatus.name() != 'APPROVED'}"
+                                      th:action="@{/admin/organizations/{id}/approve(id=${o.id})}" method="post" style="display: inline;">
+                                    <button type="submit" class="btn btn-sm btn-outline" style="font-size: 0.775rem; color: #16a34a; border-color: #86efac;">
+                                        Approve
+                                    </button>
+                                </form>
+                                <form th:if="${o.approvalStatus.name() != 'REJECTED'}"
+                                      th:action="@{/admin/organizations/{id}/reject(id=${o.id})}" method="post"
+                                      onsubmit="return confirm('Reject or revoke approval for this organization?');"
+                                      style="display: inline;">
+                                    <input type="hidden" name="reason" value="Administrative status revocation" />
+                                    <button type="submit" class="btn btn-sm btn-outline" style="font-size: 0.775rem; color: #dc2626; border-color: #fca5a5;">
+                                        Revoke / Reject
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Section 4: Security User Accounts & Access Controls -->
+        <div class="section-header" style="text-align: left; margin-bottom: 1rem;">
+            <h2 class="section-title" style="font-size: 1.4rem;">
+                User Accounts &amp; Access Administration
+            </h2>
+            <p class="section-subtitle">Manage user authorization and immediately enable/disable platform accounts</p>
+        </div>
+
+        <div class="data-table-wrapper">
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>User ID</th>
+                        <th>Email / Identity</th>
+                        <th>Platform Role</th>
+                        <th>Account Access Status</th>
+                        <th>Access Governance Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="u : ${allUsers}">
+                        <td style="font-weight: 700;" th:text="${'#USR-' + u.id}">#USR-1</td>
+                        <td>
+                            <strong th:text="${u.email}">user@example.com</strong>
+                            <span th:if="${#authentication != null and #authentication.name == u.email}"
+                                  class="badge" style="background-color: #e0e7ff; color: #3730a3; margin-left: 0.5rem;">
+                                (Current Session)
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge"
+                                  th:classappend="${u.role.name() == 'ADMIN' ? 'badge-primary' : (u.role.name() == 'DONOR' ? 'badge-veg' : 'badge-shelter')}"
+                                  th:text="${u.role}">ROLE_DONOR</span>
+                        </td>
+                        <td>
+                            <span th:if="${u.enabled}" class="badge badge-veg">&#10004; ACTIVE &amp; ENABLED</span>
+                            <span th:if="${!u.enabled}" class="badge badge-nonveg">&#128274; DISABLED / LOCKED</span>
+                        </td>
+                        <td>
+                            <!-- Prevent admin from disabling their own logged in account -->
+                            <div th:if="${#authentication != null and #authentication.name == u.email}">
+                                <button type="button" class="btn btn-sm btn-secondary" disabled
+                                        style="opacity: 0.5; cursor: not-allowed; font-size: 0.775rem;" title="Cannot disable your own active administrator account">
+                                    Protected (Self)
+                                </button>
+                            </div>
+                            <div th:if="${#authentication == null or #authentication.name != u.email}">
+                                <form th:action="@{/admin/users/{id}/toggle-status(id=${u.id})}" method="post"
+                                      onsubmit="return confirm('Are you sure you want to change this user account access state?');">
+                                    <button th:if="${u.enabled}" type="submit" class="btn btn-sm btn-outline"
+                                            style="color: #dc2626; border-color: #fca5a5; font-size: 0.775rem;">
+                                        &#128274; Disable Account
+                                    </button>
+                                    <button th:if="${!u.enabled}" type="submit" class="btn btn-sm btn-primary"
+                                            style="font-size: 0.775rem;">
+                                        &#10004; Enable Account
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

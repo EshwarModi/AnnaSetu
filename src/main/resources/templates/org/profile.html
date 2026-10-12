@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Organization Profile - AnnaSetu')}">
+    <title>Organization Profile - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <section class="dashboard-header">
+        <div class="dashboard-header-container">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <h1 style="font-size: 1.8rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                        Organization Profile
+                    </h1>
+                    <span th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}"
+                          class="badge badge-veg">APPROVED</span>
+                    <span th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).PENDING}"
+                          class="badge" style="background-color: #fef3c7; color: #92400e;">PENDING APPROVAL</span>
+                    <span th:if="${org != null and org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).REJECTED}"
+                          class="badge badge-nonveg">REJECTED</span>
+                </div>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.25rem;">
+                    Maintain up-to-date address, contact coordinator, dietary capabilities, and daily resident count.
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/org/dashboard}" class="btn btn-outline" style="font-size: 0.9rem;">
+                    &larr; Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content" style="max-width: 900px; margin: 0 auto;">
+        <div class="card" style="padding: 2.25rem;">
+            <form th:action="@{/org/profile}" th:object="${profileDto}" method="post">
+                <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}" />
+
+                <!-- Account & Verification Metadata Notice -->
+                <div style="background-color: #f8fafc; border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Registered Account</span>
+                        <div style="font-weight: 700; color: var(--dark-color);" th:text="${org.user.email}">contact@organization.org</div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Verification Status</span>
+                        <div>
+                            <span th:if="${org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).APPROVED}" style="color: var(--forest-green); font-weight: 700;">&#10003; Approved Partner</span>
+                            <span th:if="${org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).PENDING}" style="color: #b45309; font-weight: 700;">&#9203; Under Review</span>
+                            <span th:if="${org.approvalStatus == T(com.annasetu.entity.enums.ApprovalStatus).REJECTED}" style="color: var(--crimson); font-weight: 700;">&#10060; Rejected</span>
+                        </div>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Member Since</span>
+                        <div style="color: var(--dark-light);" th:text="${#temporals.format(org.createdAt, 'dd MMM yyyy')}">10 Oct 2026</div>
+                    </div>
+                </div>
+
+                <!-- Section 1: Institution Details -->
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark-color); margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    1. Institution Details
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group" style="flex: 2;">
+                        <label for="name" class="form-label">Institution Name *</label>
+                        <input type="text" id="name" th:field="*{name}"
+                               class="form-control" th:classappend="${#fields.hasErrors('name')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('name')}" th:errors="*{name}" class="field-error"></span>
+                    </div>
+
+                    <div class="form-group" style="flex: 1;">
+                        <label for="type" class="form-label">Organization Type *</label>
+                        <select id="type" th:field="*{type}"
+                                class="form-control" th:classappend="${#fields.hasErrors('type')} ? 'is-invalid' : ''"
+                                required>
+                            <option th:each="t : ${orgTypes}" th:value="${t}" th:text="${t}">ORPHANAGE</option>
+                        </select>
+                        <span th:if="${#fields.hasErrors('type')}" th:errors="*{type}" class="field-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="description" class="form-label">Mission & Description</label>
+                    <textarea id="description" th:field="*{description}" rows="3"
+                              class="form-control" th:classappend="${#fields.hasErrors('description')} ? 'is-invalid' : ''"
+                              placeholder="Brief description of the organization and the community it serves..."></textarea>
+                    <span th:if="${#fields.hasErrors('description')}" th:errors="*{description}" class="field-error"></span>
+                </div>
+
+                <!-- Section 2: Contact Person -->
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark-color); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    2. Primary Contact
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="contactPerson" class="form-label">Contact Person Name *</label>
+                        <input type="text" id="contactPerson" th:field="*{contactPerson}"
+                               class="form-control" th:classappend="${#fields.hasErrors('contactPerson')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('contactPerson')}" th:errors="*{contactPerson}" class="field-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone" class="form-label">Phone Number *</label>
+                        <input type="text" id="phone" th:field="*{phone}"
+                               class="form-control" th:classappend="${#fields.hasErrors('phone')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('phone')}" th:errors="*{phone}" class="field-error"></span>
+                    </div>
+                </div>
+
+                <!-- Section 3: Physical Location -->
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark-color); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    3. Address & Location
+                </h3>
+
+                <div class="form-group">
+                    <label for="address" class="form-label">Street Address *</label>
+                    <input type="text" id="address" th:field="*{address}"
+                           class="form-control" th:classappend="${#fields.hasErrors('address')} ? 'is-invalid' : ''"
+                           required />
+                    <span th:if="${#fields.hasErrors('address')}" th:errors="*{address}" class="field-error"></span>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="city" class="form-label">City *</label>
+                        <input type="text" id="city" th:field="*{city}"
+                               class="form-control" th:classappend="${#fields.hasErrors('city')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('city')}" th:errors="*{city}" class="field-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="area" class="form-label">Area / Locality *</label>
+                        <input type="text" id="area" th:field="*{area}"
+                               class="form-control" th:classappend="${#fields.hasErrors('area')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('area')}" th:errors="*{area}" class="field-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="pincode" class="form-label">Pincode (6 digits) *</label>
+                        <input type="text" id="pincode" th:field="*{pincode}" maxlength="6"
+                               class="form-control" th:classappend="${#fields.hasErrors('pincode')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('pincode')}" th:errors="*{pincode}" class="field-error"></span>
+                    </div>
+                </div>
+
+                <!-- Section 4: Operational Scale & Food Requirements -->
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark-color); margin-top: 2rem; margin-bottom: 1rem; border-bottom: 1px solid var(--border-color); padding-bottom: 0.5rem;">
+                    4. Meal Capacity & Dietary Standards
+                </h3>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="peopleServed" class="form-label">Daily Beneficiaries Count *</label>
+                        <input type="number" id="peopleServed" th:field="*{peopleServed}" min="1" max="10000"
+                               class="form-control" th:classappend="${#fields.hasErrors('peopleServed')} ? 'is-invalid' : ''"
+                               required />
+                        <span th:if="${#fields.hasErrors('peopleServed')}" th:errors="*{peopleServed}" class="field-error"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="foodPreference" class="form-label">Food Preference *</label>
+                        <select id="foodPreference" th:field="*{foodPreference}"
+                                class="form-control" th:classappend="${#fields.hasErrors('foodPreference')} ? 'is-invalid' : ''"
+                                required>
+                            <option th:each="f : ${foodPreferences}" th:value="${f}" th:text="${f}">VEG</option>
+                        </select>
+                        <span th:if="${#fields.hasErrors('foodPreference')}" th:errors="*{foodPreference}" class="field-error"></span>
+                    </div>
+                </div>
+
+                <div style="margin-top: 2.5rem; display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
+                    <a th:href="@{/org/dashboard}" class="btn btn-outline">Cancel</a>
+                    <button type="submit" class="btn btn-primary" style="min-width: 180px;">
+                        Save Profile Changes
+                    </button>
+                </div>
+            </form>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Find Food Donation Slots - AnnaSetu')}">
+    <title>Find Food Donation Slots - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Page Banner -->
+    <section class="dashboard-header">
+        <div class="dashboard-header-container">
+            <div>
+                <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                    Search Verified Institutions & Slots
+                </h1>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.35rem;">
+                    Find orphanages, old age homes, and community shelters with available meal sponsorship slots.
+                </p>
+            </div>
+            <div>
+                <span class="badge badge-veg" style="font-size: 0.875rem; padding: 0.4rem 0.8rem;">
+                    &#10004; Only Approved Partners Shown
+                </span>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <!-- Search Filter Controls Bar -->
+        <div class="card" style="padding: 1.5rem; margin-bottom: 2rem;">
+            <form th:action="@{/search}" method="get" id="searchFilterForm">
+                <div class="grid grid-3" style="gap: 1rem; margin-bottom: 1rem;">
+                    <!-- City Filter -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="city" class="form-label">City</label>
+                        <select id="city" name="city" class="form-control">
+                            <option value="">All Cities</option>
+                            <option th:each="c : ${cities}" th:value="${c}" th:text="${c}"
+                                    th:selected="${criteria.city != null and criteria.city.equalsIgnoreCase(c)}">Pune</option>
+                        </select>
+                    </div>
+
+                    <!-- Area or Pincode -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="areaOrPincode" class="form-label">Area or Pincode</label>
+                        <input type="text" id="areaOrPincode" name="areaOrPincode" class="form-control"
+                               placeholder="e.g. Kothrud or 411038"
+                               th:value="${criteria.areaOrPincode}" />
+                    </div>
+
+                    <!-- Organization Type -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="type" class="form-label">Organization Category</label>
+                        <select id="type" name="type" class="form-control">
+                            <option value="">All Categories</option>
+                            <option th:each="t : ${orgTypes}" th:value="${t}" th:text="${t}"
+                                    th:selected="${criteria.type != null and criteria.type == t}">ORPHANAGE</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="grid grid-3" style="gap: 1rem; align-items: flex-end;">
+                    <!-- Date Picker -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="date" class="form-label">Sponsorship Date</label>
+                        <input type="date" id="date" name="date" class="form-control"
+                               th:min="${today}"
+                               th:value="${criteria.date != null ? criteria.date : ''}" />
+                    </div>
+
+                    <!-- Meal Slot -->
+                    <div class="form-group" style="margin-bottom: 0;">
+                        <label for="mealSlot" class="form-label">Meal Window</label>
+                        <select id="mealSlot" name="mealSlot" class="form-control">
+                            <option value="">Any Meal (All)</option>
+                            <option th:each="ms : ${mealSlots}" th:value="${ms}" th:text="${ms}"
+                                    th:selected="${criteria.mealSlot != null and criteria.mealSlot == ms}">LUNCH</option>
+                        </select>
+                    </div>
+
+                    <!-- Food Preference & Actions -->
+                    <div style="display: flex; gap: 0.75rem; align-items: flex-end;">
+                        <div class="form-group" style="margin-bottom: 0; flex: 1;">
+                            <label for="foodPreference" class="form-label">Dietary Compliance</label>
+                            <select id="foodPreference" name="foodPreference" class="form-control">
+                                <option value="">Any Diet</option>
+                                <option th:each="fp : ${foodPreferences}" th:value="${fp}" th:text="${fp}"
+                                        th:selected="${criteria.foodPreference != null and criteria.foodPreference == fp}">VEG</option>
+                            </select>
+                        </div>
+
+                        <button type="submit" class="btn btn-primary" style="height: 42px; padding: 0 1.25rem; white-space: nowrap;">
+                            Filter Slots
+                        </button>
+                        <a th:href="@{/search}" class="btn btn-outline" style="height: 42px; padding: 0 1rem; display: flex; align-items: center;" title="Reset Filters">
+                            Reset
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Search Results Header -->
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 0.5rem;">
+            <div>
+                <h2 style="font-size: 1.35rem; font-weight: 700; color: var(--dark-color); margin: 0;">
+                    Available Institutions with Open Slots
+                </h2>
+                <p style="font-size: 0.875rem; color: var(--muted-color); margin: 0.2rem 0 0 0;">
+                    <span th:text="${results.totalElements}">8</span> organization(s) found with unbooked capacity
+                    <span th:if="${criteria.date != null}"> on <strong th:text="${#temporals.format(criteria.date, 'dd MMM yyyy')}">15 Oct 2026</strong></span>
+                    <span th:if="${criteria.city != null and !criteria.city.isBlank()}"> in <strong th:text="${criteria.city}">Pune</strong></span>
+                </p>
+            </div>
+            <div th:if="${criteria.hasActiveFilters()}">
+                <span class="badge badge-amber" style="font-size: 0.8rem;">Filtered View</span>
+            </div>
+        </div>
+
+        <!-- Empty State Alert -->
+        <div th:if="${results.isEmpty()}" class="alert alert-info" style="padding: 2rem; text-align: center; display: block;">
+            <div style="font-size: 2.5rem; margin-bottom: 0.5rem;">&#128269;</div>
+            <h3 style="font-size: 1.25rem; font-weight: 700; color: var(--dark-color); margin-bottom: 0.5rem;">
+                No matching organizations with open slots found
+            </h3>
+            <p style="color: var(--dark-light); max-width: 550px; margin: 0 auto 1.25rem auto; line-height: 1.5;">
+                Organizations may be fully booked on this date, or no institutions match your specific dietary or category filters.
+                Try choosing another date, selecting "All Cities", or resetting your search filters.
+            </p>
+            <a th:href="@{/search}" class="btn btn-primary btn-sm">Clear All Filters</a>
+        </div>
+
+        <!-- Search Result Cards Grid -->
+        <div th:if="${!results.isEmpty()}" class="grid grid-3" style="gap: 1.5rem; margin-bottom: 2.5rem;">
+            <article th:each="org : ${results.content}" class="card org-card" style="display: flex; flex-direction: column; justify-content: space-between;">
+                <div>
+                    <!-- Card Top: Name & Type -->
+                    <div class="org-card-header" style="display: flex; justify-content: space-between; align-items: flex-start; gap: 0.5rem;">
+                        <h3 class="org-card-title" style="margin: 0; font-size: 1.15rem; font-weight: 700; color: var(--dark-color);" th:text="${org.name}">
+                            Asha Kiran Children Home
+                        </h3>
+                        <span class="badge"
+                              th:classappend="${org.type.name() == 'ORPHANAGE' ? 'badge-orphanage' : (org.type.name() == 'OLD_AGE_HOME' ? 'badge-old-age' : 'badge-shelter')}"
+                              th:text="${org.type}">ORPHANAGE</span>
+                    </div>
+
+                    <!-- Area / Distance-Free Info -->
+                    <div style="display: flex; align-items: center; gap: 0.35rem; color: var(--muted-color); font-size: 0.85rem; margin: 0.5rem 0;">
+                        <span>&#128205;</span>
+                        <strong th:text="${org.area + ', ' + org.city}">Kothrud, Pune</strong>
+                        <span th:text="${'(' + org.pincode + ')'}">(411038)</span>
+                    </div>
+
+                    <!-- Physical Address -->
+                    <p style="font-size: 0.85rem; color: var(--dark-light); margin: 0 0 0.75rem 0;" th:text="${org.address}">
+                        Plot 45, FC Road, Deccan Gymkhana
+                    </p>
+
+                    <!-- Mission Description (truncated) -->
+                    <p class="org-card-desc" style="font-size: 0.85rem; color: var(--muted-color); line-height: 1.5; margin-bottom: 1rem;" th:text="${org.description}">
+                        Home providing holistic care, education, and nutrition.
+                    </p>
+
+                    <!-- Meta Tags List -->
+                    <ul class="org-meta-list" style="margin-bottom: 1rem;">
+                        <li class="org-meta-item">
+                            <strong>Beneficiaries:</strong>
+                            <span th:text="${org.peopleServed + ' daily residents'}">65 people</span>
+                        </li>
+                        <li class="org-meta-item">
+                            <strong>Dietary Standard:</strong>
+                            <span class="badge"
+                                  th:classappend="${org.foodPreference.name() == 'VEG' ? 'badge-veg' : 'badge-both'}"
+                                  th:text="${org.foodPreference}">VEG</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <!-- Card Bottom: Remaining Capacity Badge & CTAs -->
+                <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; margin-top: 0.5rem;">
+                    <!-- Remaining Capacity Badge -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.75rem;">
+                        <span class="badge badge-slot-free" style="font-size: 0.8rem; padding: 0.35rem 0.65rem;">
+                            &#10003; <span th:text="${org.availableSlotsCount}">3</span> Free Slot(s) Available
+                        </span>
+                        <span style="font-size: 0.75rem; color: var(--muted-color);">Verified Partner</span>
+                    </div>
+
+                    <!-- Dual CTAs: View & Book + Google Maps -->
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a th:href="@{${org.viewAndBookUrl}}" class="btn btn-primary" style="flex: 2; text-align: center; font-size: 0.85rem; padding: 0.5rem;">
+                            View &amp; Book Slot &rarr;
+                        </a>
+                        <a th:href="@{${org.googleMapsUrl}}" target="_blank" rel="noopener noreferrer"
+                           class="btn btn-outline" style="flex: 1; text-align: center; font-size: 0.8rem; padding: 0.5rem; white-space: nowrap;"
+                           title="Open Location in Google Maps">
+                            &#128506; Maps
+                        </a>
+                    </div>
+                </div>
+            </article>
+        </div>
+
+        <!-- Accessible Pagination Bar -->
+        <nav th:if="${results.totalPages > 1}" aria-label="Search results pages" style="display: flex; justify-content: center; margin-top: 2rem;">
+            <ul class="pagination" style="display: flex; gap: 0.35rem; list-style: none; padding: 0;">
+                <!-- Previous Button -->
+                <li class="pagination-item">
+                    <a th:href="@{/search(page=${results.number - 1}, size=${criteria.size}, city=${criteria.city}, areaOrPincode=${criteria.areaOrPincode}, type=${criteria.type}, date=${criteria.date}, mealSlot=${criteria.mealSlot}, foodPreference=${criteria.foodPreference})}"
+                       class="pagination-link"
+                       th:classappend="${results.first} ? 'disabled' : ''"
+                       aria-label="Previous Page">&laquo; Prev</a>
+                </li>
+
+                <!-- Page Number Links -->
+                <li th:each="pageNum : ${#numbers.sequence(0, results.totalPages - 1)}" class="pagination-item">
+                    <a th:href="@{/search(page=${pageNum}, size=${criteria.size}, city=${criteria.city}, areaOrPincode=${criteria.areaOrPincode}, type=${criteria.type}, date=${criteria.date}, mealSlot=${criteria.mealSlot}, foodPreference=${criteria.foodPreference})}"
+                       class="pagination-link"
+                       th:classappend="${pageNum == results.number} ? 'active' : ''"
+                       th:text="${pageNum + 1}">1</a>
+                </li>
+
+                <!-- Next Button -->
+                <li class="pagination-item">
+                    <a th:href="@{/search(page=${results.number + 1}, size=${criteria.size}, city=${criteria.city}, areaOrPincode=${criteria.areaOrPincode}, type=${criteria.type}, date=${criteria.date}, mealSlot=${criteria.mealSlot}, foodPreference=${criteria.foodPreference})}"
+                       class="pagination-link"
+                       th:classappend="${results.last} ? 'disabled' : ''"
+                       aria-label="Next Page">Next &raquo;</a>
+                </li>
+            </ul>
+        </nav>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

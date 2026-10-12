@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Error - AnnaSetu')}">
+    <title>Error - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <main class="main-content">
+        <div class="error-page">
+            <div class="error-badge" style="color: var(--danger-color);" th:text="${statusCode != null ? statusCode : 500}">500</div>
+            <h1 class="error-title" th:text="${errorTitle != null ? errorTitle : 'Unexpected Error'}">Unexpected Error</h1>
+            <p class="error-desc" th:text="${errorMessage != null ? errorMessage : 'Something went wrong while processing your request.'}">
+                Something went wrong.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center;">
+                <a th:href="@{/}" class="btn btn-primary">Return to Home</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

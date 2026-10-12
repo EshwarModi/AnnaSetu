@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('Book Food Donation Slot - AnnaSetu')}">
+    <title>Book Food Donation Slot - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Booking Form Header -->
+    <section class="dashboard-header">
+        <div class="dashboard-header-container">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                        Reserve Food Donation Slot
+                    </h1>
+                    <span class="badge badge-primary">STEP 2 OF 2</span>
+                </div>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.35rem;">
+                    Confirm your meal sponsorship details for
+                    <strong th:text="${org.name}">Asha Kiran Home</strong> on
+                    <strong th:text="${#temporals.format(slot.slotDate, 'EEEE, MMMM d, yyyy')}">Friday, October 25, 2026</strong>
+                </p>
+            </div>
+            <div>
+                <a th:href="@{/organizations/{id}(id=${org.id})}" class="btn btn-outline" style="font-size: 0.9rem;">
+                    &larr; Back to Organization Details
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <div class="grid grid-3" style="gap: 2rem; align-items: flex-start;">
+
+            <!-- Left / Main Column: Booking Form (Spans 2 columns) -->
+            <div class="card" style="grid-column: span 2; padding: 2rem; border-top: 4px solid var(--primary-color);">
+                <h2 style="font-size: 1.35rem; font-weight: 800; color: var(--dark-color); margin: 0 0 0.5rem 0;">
+                    Sponsorship Information
+                </h2>
+                <p style="font-size: 0.875rem; color: var(--muted-color); margin: 0 0 1.5rem 0;">
+                    Please share details about your celebratory occasion and the meal you plan to provide.
+                </p>
+
+                <form th:action="@{/donor/book}" th:object="${bookingDto}" method="post" novalidate>
+                    <!-- Hidden Slot ID -->
+                    <input type="hidden" th:field="*{slotId}" />
+
+                    <!-- Form Level Global Errors -->
+                    <div th:if="${#fields.hasGlobalErrors()}" class="alert alert-error" style="margin-bottom: 1.25rem;">
+                        <span>&#10060;</span>
+                        <span th:each="err : ${#fields.globalErrors()}" th:text="${err}">Global error</span>
+                    </div>
+
+                    <!-- 1. Occasion Field -->
+                    <div class="form-group">
+                        <label for="occasion" class="form-label" style="font-weight: 700;">
+                            Celebratory Occasion <span style="color: var(--primary-color);">*</span>
+                        </label>
+                        <select id="occasion" th:field="*{occasion}" class="form-control"
+                                th:classappend="${#fields.hasErrors('occasion')} ? 'is-invalid' : ''">
+                            <option value="" disabled selected>-- Select an Occasion --</option>
+                            <option th:each="occ : ${occasions}"
+                                    th:value="${occ}"
+                                    th:text="${#strings.capitalize(#strings.toLowerCase(occ))}">
+                                Birthday
+                            </option>
+                        </select>
+                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                            Occasion why you are sponsoring this meal (Birthday, Anniversary, Memorial, Festival, or Other).
+                        </small>
+                        <span th:if="${#fields.hasErrors('occasion')}" th:errors="*{occasion}" class="field-error">
+                            Invalid occasion
+                        </span>
+                    </div>
+
+                    <!-- 2. Beneficiaries / Group Size Field -->
+                    <div class="form-group">
+                        <label for="peopleCount" class="form-label" style="font-weight: 700;">
+                            Number of People to Serve <span style="color: var(--primary-color);">*</span>
+                        </label>
+                        <input type="number" id="peopleCount" th:field="*{peopleCount}" min="1" max="500"
+                               class="form-control"
+                               th:classappend="${#fields.hasErrors('peopleCount')} ? 'is-invalid' : ''"
+                               placeholder="e.g. 65" />
+                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                            Institution currently houses approximately
+                            <strong th:text="${org.peopleServed}">65</strong> residents.
+                        </small>
+                        <span th:if="${#fields.hasErrors('peopleCount')}" th:errors="*{peopleCount}" class="field-error">
+                            Invalid people count
+                        </span>
+                    </div>
+
+                    <!-- 3. Food / Menu Description -->
+                    <div class="form-group">
+                        <label for="foodDescription" class="form-label" style="font-weight: 700;">
+                            Food &amp; Menu Description <span style="color: var(--primary-color);">*</span>
+                        </label>
+                        <textarea id="foodDescription" th:field="*{foodDescription}" rows="4"
+                                  class="form-control"
+                                  th:classappend="${#fields.hasErrors('foodDescription')} ? 'is-invalid' : ''"
+                                  placeholder="Describe the dishes or menu items you plan to offer (e.g. Festive vegetarian feast with paneer butter masala, dal tadka, jeera rice, chapati, salad, and gulab jamun)..."></textarea>
+                        <small style="color: var(--muted-color); font-size: 0.8rem; display: block; margin-top: 0.25rem;">
+                            Institution requires <strong th:text="${org.foodPreference}">VEG</strong> preparation.
+                            Max 1,000 characters.
+                        </small>
+                        <span th:if="${#fields.hasErrors('foodDescription')}" th:errors="*{foodDescription}" class="field-error">
+                            Invalid food description
+                        </span>
+                    </div>
+
+                    <!-- Trust & Cutoff Notice -->
+                    <div style="background-color: var(--cream-bg); border-left: 4px solid var(--forest-green); border-radius: var(--radius-sm); padding: 1rem 1.25rem; margin-bottom: 1.75rem;">
+                        <div style="font-size: 0.875rem; font-weight: 700; color: var(--forest-green); margin-bottom: 0.25rem;">
+                            &#128737; Concurrency &amp; Booking Guarantee
+                        </div>
+                        <p style="margin: 0; font-size: 0.825rem; color: var(--dark-light); line-height: 1.5;">
+                            When you submit this reservation, AnnaSetu executes a database-level lock to prevent double-booking.
+                            Your booking will be placed in <strong>PENDING</strong> status for the organization to review.
+                            You may cancel at any time up until <strong>12 hours</strong> before the scheduled meal time.
+                        </p>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                        <button type="submit" class="btn btn-primary" style="padding: 0.85rem 2rem; font-size: 1rem; font-weight: 700;">
+                            &#10004; Confirm &amp; Reserve Slot
+                        </button>
+                        <a th:href="@{/organizations/{id}(id=${org.id})}" class="btn btn-outline" style="padding: 0.85rem 1.5rem; font-size: 0.95rem;">
+                            Cancel
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Right Column: Summary Sidebar (1 Column) -->
+            <div>
+                <!-- Slot Summary Card -->
+                <div class="card" style="padding: 1.5rem; margin-bottom: 1.5rem; border-top: 4px solid var(--secondary-color);">
+                    <h3 style="font-size: 1.15rem; font-weight: 800; color: var(--dark-color); margin: 0 0 1rem 0;">
+                        Slot Summary
+                    </h3>
+
+                    <div style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                        <span style="font-size: 0.75rem; color: var(--muted-color); text-transform: uppercase; font-weight: 700;">Date</span>
+                        <div style="font-size: 1.05rem; font-weight: 800; color: var(--dark-color);"
+                             th:text="${#temporals.format(slot.slotDate, 'EEEE, MMM d, yyyy')}">
+                            Friday, Oct 25, 2026
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                        <span style="font-size: 0.75rem; color: var(--muted-color); text-transform: uppercase; font-weight: 700;">Meal Window</span>
+                        <div>
+                            <span class="badge" th:text="${slot.mealSlot}">LUNCH</span>
+                            <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;"
+                                  th:if="${slot.mealSlot.name() == 'BREAKFAST'}">7:30 AM - 9:00 AM</span>
+                            <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;"
+                                  th:if="${slot.mealSlot.name() == 'LUNCH'}">12:30 PM - 2:00 PM</span>
+                            <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;"
+                                  th:if="${slot.mealSlot.name() == 'DINNER'}">7:30 PM - 9:00 PM</span>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1rem; padding-bottom: 0.75rem; border-bottom: 1px solid var(--border-color);">
+                        <span style="font-size: 0.75rem; color: var(--muted-color); text-transform: uppercase; font-weight: 700;">Remaining Capacity</span>
+                        <div style="font-size: 0.95rem; font-weight: 700; color: var(--forest-green);"
+                             th:text="${slot.remainingCapacity + ' spot left (Capacity: ' + slot.capacity + ')'}">
+                            1 spot left (Capacity: 1)
+                        </div>
+                    </div>
+
+                    <div>
+                        <span style="font-size: 0.75rem; color: var(--muted-color); text-transform: uppercase; font-weight: 700;">Dietary Mandate</span>
+                        <div>
+                            <span class="badge badge-veg" th:text="${org.foodPreference}">VEG</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Organization Quick Card -->
+                <div class="card" style="padding: 1.5rem;">
+                    <h3 style="font-size: 1.1rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.75rem 0;" th:text="${org.name}">
+                        Asha Kiran Home
+                    </h3>
+                    <p style="font-size: 0.85rem; color: var(--muted-color); margin: 0 0 0.75rem 0;"
+                       th:text="${org.area + ', ' + org.city + ' - ' + org.pincode}">
+                        Kothrud, Pune - 411038
+                    </p>
+                    <div style="font-size: 0.825rem; color: var(--dark-light); line-height: 1.6;">
+                        <div><strong>Coordinator:</strong> <span th:text="${org.contactPerson}">Sunita Deshmukh</span></div>
+                        <div><strong>Phone:</strong> <span th:text="${org.phone}">+91 98220 11223</span></div>
+                        <div><strong>Residents:</strong> <span th:text="${org.peopleServed}">65</span> people</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

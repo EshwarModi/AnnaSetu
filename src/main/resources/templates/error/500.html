@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head('500 - Internal Server Error')}">
+    <title>500 - Internal Server Error</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <main class="main-content">
+        <div class="error-page">
+            <div class="error-badge" style="color: var(--danger-color);">500</div>
+            <h1 class="error-title">Internal Server Error</h1>
+            <p class="error-desc" th:text="${errorMessage != null ? errorMessage : 'We encountered an unexpected error processing your request. Our team has been notified.'}">
+                We encountered an unexpected error processing your request. Please return to the homepage or try again later.
+            </p>
+            <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1.5rem;">
+                <a th:href="@{/}" class="btn btn-primary">Return to Home</a>
+                <a th:href="@{/search}" class="btn btn-secondary">Search Meals</a>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>

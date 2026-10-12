@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head(${pageTitle})}">
+    <title th:text="${pageTitle}">Organization Details - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Organization Detail Banner -->
+    <section class="dashboard-header">
+        <div class="dashboard-header-container">
+            <div>
+                <div style="display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap;">
+                    <h1 style="font-size: 1.85rem; font-weight: 800; color: var(--dark-color); margin: 0;" th:text="${org.name}">
+                        Asha Kiran Children Home
+                    </h1>
+                    <span class="badge"
+                          th:classappend="${org.type.name() == 'ORPHANAGE' ? 'badge-orphanage' : (org.type.name() == 'OLD_AGE_HOME' ? 'badge-old-age' : 'badge-shelter')}"
+                          th:text="${org.type}">ORPHANAGE</span>
+                    <span class="badge badge-veg">&#10004; Verified Partner</span>
+                </div>
+                <p style="color: var(--muted-color); font-size: 0.95rem; margin-top: 0.35rem;">
+                    <span th:text="${org.area + ', ' + org.city}">Pune</span> &bull;
+                    <span th:text="${org.peopleServed + ' daily residents served'}">65 people</span> &bull;
+                    <span class="badge"
+                          th:classappend="${org.foodPreference.name() == 'VEG' ? 'badge-veg' : 'badge-both'}"
+                          th:text="${org.foodPreference}">VEG</span>
+                </p>
+            </div>
+            <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+                <a th:href="@{/search}" class="btn btn-outline" style="font-size: 0.9rem;">
+                    &larr; Back to Search
+                </a>
+                <a th:href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer"
+                   class="btn btn-outline" style="font-size: 0.9rem;"
+                   title="Open in Google Maps">
+                    &#128506; Open in Maps
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <main class="main-content">
+        <!-- Two Column Overview: Details & Mission -->
+        <div class="grid grid-3" style="gap: 1.5rem; margin-bottom: 2.5rem;">
+            <!-- Mission & Overview Card (2 Columns) -->
+            <div class="card" style="grid-column: span 2; padding: 1.75rem;">
+                <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.75rem 0;">
+                    About This Institution
+                </h3>
+                <p style="font-size: 0.95rem; line-height: 1.6; color: var(--dark-light); margin: 0 0 1.25rem 0;" th:text="${org.description}">
+                    Dedicated to providing holistic shelter, nutritious food, healthcare, and educational support to children.
+                </p>
+
+                <div class="grid grid-2" style="gap: 1.25rem; border-top: 1px solid var(--border-color); padding-top: 1.25rem;">
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Address</span>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; color: var(--dark-color);" th:text="${org.address}">123 Main Road</p>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.85rem; color: var(--dark-light);" th:text="${org.area + ', ' + org.city + ' - ' + org.pincode}">Kothrud, Pune - 411038</p>
+                    </div>
+                    <div>
+                        <span style="font-size: 0.8rem; color: var(--muted-color); text-transform: uppercase; font-weight: 600;">Contact Coordinator</span>
+                        <p style="margin: 0.25rem 0 0 0; font-size: 0.9rem; font-weight: 600; color: var(--dark-color);" th:text="${org.contactPerson}">Sunita Deshmukh</p>
+                        <p style="margin: 0.15rem 0 0 0; font-size: 0.85rem; color: var(--dark-light);" th:text="${org.phone}">+91 98220 11223</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Guidelines Card (1 Column) -->
+            <div class="card" style="padding: 1.75rem; background-color: var(--cream-bg);">
+                <h3 style="font-size: 1.15rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.75rem 0;">
+                    Donation Guidelines
+                </h3>
+                <ul style="margin: 0; padding-left: 1.2rem; font-size: 0.85rem; color: var(--dark-light); line-height: 1.7;">
+                    <li><strong>Dietary Compliance:</strong> Kitchen strictly prepares <span style="font-weight: 700;" th:text="${org.foodPreference}">VEG</span> food.</li>
+                    <li><strong>Beneficiaries:</strong> Serves approximately <strong th:text="${org.peopleServed}">65</strong> residents per meal.</li>
+                    <li><strong>Capacity Model:</strong> Exclusive (single family) or Shared (co-sponsorship with another donor).</li>
+                    <li><strong>Verification:</strong> 100% verified non-profit partner.</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Interactive Slot Availability Section -->
+        <div class="card" style="padding: 2rem; border-top: 4px solid var(--primary-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem;">
+                <div>
+                    <h2 style="font-size: 1.4rem; font-weight: 800; color: var(--dark-color); margin: 0;">
+                        Live Meal Slot Availability
+                    </h2>
+                    <p style="font-size: 0.875rem; color: var(--muted-color); margin: 0.25rem 0 0 0;">
+                        Select a sponsorship date to inspect real-time meal availability and remaining donor spots.
+                    </p>
+                </div>
+
+                <!-- Date Picker Input -->
+                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                    <label for="slotDatePicker" style="font-size: 0.9rem; font-weight: 600; color: var(--dark-color); white-space: nowrap;">
+                        Choose Date:
+                    </label>
+                    <input type="date" id="slotDatePicker" name="date" class="form-control"
+                           style="max-width: 200px; font-weight: 600;"
+                           th:min="${today}"
+                           th:value="${selectedDate}" />
+                </div>
+            </div>
+
+            <!-- Live Status Alert Box -->
+            <div id="loadingIndicator" style="display: none; padding: 0.75rem; background-color: #f8fafc; border-radius: var(--radius-sm); margin-bottom: 1.5rem; text-align: center; font-size: 0.875rem; color: var(--muted-color);">
+                &#8987; Checking live slot availability...
+            </div>
+
+            <!-- Three Meal-Slot Buttons Grid -->
+            <div class="grid grid-3" style="gap: 1.5rem;" id="mealSlotsGrid">
+
+                <!-- 1. BREAKFAST SLOT CARD -->
+                <div class="card meal-slot-card" id="card-BREAKFAST" style="padding: 1.5rem; text-align: center; border: 1px solid var(--border-color);">
+                    <div style="font-size: 2.25rem; margin-bottom: 0.25rem;">&#127749;</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.25rem 0;">
+                        Breakfast
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--muted-color); margin-bottom: 1rem;">Morning Feast &bull; 7:30 AM - 9:00 AM</p>
+
+                    <div id="status-BREAKFAST" style="margin-bottom: 1.25rem; min-height: 28px;">
+                        <!-- Initial Server-Rendered State -->
+                        <span th:each="s : ${initialSlots}" th:if="${s.mealSlot.name() == 'BREAKFAST'}">
+                            <span th:if="${s.isAvailable}" class="badge badge-veg" th:text="${s.statusMessage}">Available (1 spot left)</span>
+                            <span th:if="${!s.isAvailable and s.isConfigured}" class="badge badge-nonveg">Fully Booked (0 spots left)</span>
+                            <span th:if="${!s.isConfigured}" class="badge" style="background-color: #f3f4f6; color: #6b7280;">Not Configured</span>
+                        </span>
+                    </div>
+
+                    <div id="action-BREAKFAST">
+                        <span th:each="s : ${initialSlots}" th:if="${s.mealSlot.name() == 'BREAKFAST'}">
+                            <a th:if="${s.isAvailable}" th:href="@{/donor/book(slotId=${s.slotId})}" class="btn btn-primary" style="width: 100%;">
+                                Book Breakfast
+                            </a>
+                            <button th:if="${!s.isAvailable and s.isConfigured}" type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">
+                                Fully Booked
+                            </button>
+                            <button th:if="${!s.isConfigured}" type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">
+                                Not Available
+                            </button>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 2. LUNCH SLOT CARD -->
+                <div class="card meal-slot-card" id="card-LUNCH" style="padding: 1.5rem; text-align: center; border: 1px solid var(--border-color);">
+                    <div style="font-size: 2.25rem; margin-bottom: 0.25rem;">&#9728;</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.25rem 0;">
+                        Lunch
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--muted-color); margin-bottom: 1rem;">Afternoon Banquet &bull; 12:30 PM - 2:00 PM</p>
+
+                    <div id="status-LUNCH" style="margin-bottom: 1.25rem; min-height: 28px;">
+                        <span th:each="s : ${initialSlots}" th:if="${s.mealSlot.name() == 'LUNCH'}">
+                            <span th:if="${s.isAvailable}" class="badge badge-veg" th:text="${s.statusMessage}">Available (2 spots left)</span>
+                            <span th:if="${!s.isAvailable and s.isConfigured}" class="badge badge-nonveg">Fully Booked (0 spots left)</span>
+                            <span th:if="${!s.isConfigured}" class="badge" style="background-color: #f3f4f6; color: #6b7280;">Not Configured</span>
+                        </span>
+                    </div>
+
+                    <div id="action-LUNCH">
+                        <span th:each="s : ${initialSlots}" th:if="${s.mealSlot.name() == 'LUNCH'}">
+                            <a th:if="${s.isAvailable}" th:href="@{/donor/book(slotId=${s.slotId})}" class="btn btn-primary" style="width: 100%;">
+                                Book Lunch
+                            </a>
+                            <button th:if="${!s.isAvailable and s.isConfigured}" type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">
+                                Fully Booked
+                            </button>
+                            <button th:if="${!s.isConfigured}" type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">
+                                Not Available
+                            </button>
+                        </span>
+                    </div>
+                </div>
+
+                <!-- 3. DINNER SLOT CARD -->
+                <div class="card meal-slot-card" id="card-DINNER" style="padding: 1.5rem; text-align: center; border: 1px solid var(--border-color);">
+                    <div style="font-size: 2.25rem; margin-bottom: 0.25rem;">&#127769;</div>
+                    <h3 style="font-size: 1.2rem; font-weight: 700; color: var(--dark-color); margin: 0 0 0.25rem 0;">
+                        Dinner
+                    </h3>
+                    <p style="font-size: 0.8rem; color: var(--muted-color); margin-bottom: 1rem;">Evening Meal &bull; 7:30 PM - 9:00 PM</p>
+
+                    <div id="status-DINNER" style="margin-bottom: 1.25rem; min-height: 28px;">
+                        <span th:each="s : ${initialSlots}" th:if="${s.mealSlot.name() == 'DINNER'}">
+                            <span th:if="${s.isAvailable}" class="badge badge-veg" th:text="${s.statusMessage}">Available (1 spot left)</span>
+                            <span th:if="${!s.isAvailable and s.isConfigured}" class="badge badge-nonveg">Fully Booked (0 spots left)</span>
+                            <span th:if="${!s.isConfigured}" class="badge" style="background-color: #f3f4f6; color: #6b7280;">Not Configured</span>
+                        </span>
+                    </div>
+
+                    <div id="action-DINNER">
+                        <span th:each="s : ${initialSlots}" th:if="${s.mealSlot.name() == 'DINNER'}">
+                            <a th:if="${s.isAvailable}" th:href="@{/donor/book(slotId=${s.slotId})}" class="btn btn-primary" style="width: 100%;">
+                                Book Dinner
+                            </a>
+                            <button th:if="${!s.isAvailable and s.isConfigured}" type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">
+                                Fully Booked
+                            </button>
+                            <button th:if="${!s.isConfigured}" type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">
+                                Not Available
+                            </button>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Booking Note for Donors -->
+            <div style="margin-top: 1.75rem; padding: 1rem; background-color: #f8fafc; border-radius: var(--radius-sm); display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 0.75rem;">
+                <div style="font-size: 0.85rem; color: var(--dark-light);">
+                    &#9432; <strong>How booking works:</strong> Once you select an available meal slot, you can choose your celebratory occasion (Birthday, Anniversary, Memorial, etc.) and complete your sponsorship booking.
+                </div>
+                <div sec:authorize="isAnonymous()">
+                    <span style="font-size: 0.825rem; color: var(--muted-color);">New donor? </span>
+                    <a th:href="@{/register/donor}" style="font-size: 0.825rem; font-weight: 700; color: var(--primary-color);">Create free donor account &rarr;</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+    <!-- Vanilla JavaScript Live Slot Fetching -->
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+        document.addEventListener('DOMContentLoaded', function () {
+            const orgId = /*[[${org.id}]]*/ 1;
+            const datePicker = document.getElementById('slotDatePicker');
+            const loadingIndicator = document.getElementById('loadingIndicator');
+
+            function refreshSlotAvailability(dateValue) {
+                if (!dateValue) return;
+
+                if (loadingIndicator) {
+                    loadingIndicator.style.display = 'block';
+                }
+
+                const endpoint = '/api/organizations/' + orgId + '/slots?date=' + encodeURIComponent(dateValue);
+
+                fetch(endpoint)
+                    .then(function (response) {
+                        if (!response.ok) {
+                            throw new Error('Network response error: ' + response.status);
+                        }
+                        return response.json();
+                    })
+                    .then(function (slots) {
+                        slots.forEach(function (slot) {
+                            renderMealSlot(slot);
+                        });
+                    })
+                    .catch(function (error) {
+                        console.error('Failed to fetch slot availability:', error);
+                    })
+                    .finally(function () {
+                        if (loadingIndicator) {
+                            loadingIndicator.style.display = 'none';
+                        }
+                    });
+            }
+
+            function renderMealSlot(slot) {
+                const meal = slot.mealSlot;
+                const statusContainer = document.getElementById('status-' + meal);
+                const actionContainer = document.getElementById('action-' + meal);
+                const card = document.getElementById('card-' + meal);
+
+                if (!statusContainer || !actionContainer) return;
+
+                if (slot.isAvailable) {
+                    // 1. Available Slot
+                    const spotText = slot.remainingCapacity === 1 ? '1 spot left' : slot.remainingCapacity + ' spots left';
+                    statusContainer.innerHTML = '<span class="badge badge-veg">Available (' + spotText + ')</span>';
+
+                    actionContainer.innerHTML = '<a href="/donor/book?slotId=' + slot.slotId + '" class="btn btn-primary" style="width: 100%;">Book ' + slot.mealSlotDisplayName + '</a>';
+
+                    if (card) {
+                        card.style.opacity = '1';
+                        card.style.borderColor = 'var(--forest-green)';
+                    }
+                } else if (slot.isConfigured) {
+                    // 2. Fully Booked Slot (bookedCount >= capacity)
+                    statusContainer.innerHTML = '<span class="badge badge-nonveg">Fully Booked (0 spots left)</span>';
+
+                    actionContainer.innerHTML = '<button type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">Fully Booked</button>';
+
+                    if (card) {
+                        card.style.opacity = '0.75';
+                        card.style.borderColor = 'var(--border-color)';
+                    }
+                } else {
+                    // 3. Unconfigured Slot
+                    statusContainer.innerHTML = '<span class="badge" style="background-color: #f3f4f6; color: #6b7280;">Not Configured</span>';
+
+                    actionContainer.innerHTML = '<button type="button" class="btn btn-secondary" disabled style="width: 100%; opacity: 0.55; cursor: not-allowed;">Not Available</button>';
+
+                    if (card) {
+                        card.style.opacity = '0.65';
+                        card.style.borderColor = 'var(--border-color)';
+                    }
+                }
+            }
+
+            // Bind change listener to date picker
+            if (datePicker) {
+                datePicker.addEventListener('change', function () {
+                    refreshSlotAvailability(this.value);
+                });
+            }
+        });
+        /*]]>*/
+    </script>
+</body>
+</html>

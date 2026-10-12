@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="~{fragments/layout :: html-head(${pageTitle})}">
+    <title th:text="${pageTitle}">Donation Receipt - AnnaSetu</title>
+</head>
+<body>
+
+    <!-- Header Navigation (Hidden during print) -->
+    <header th:replace="~{fragments/layout :: navbar}"></header>
+
+    <!-- Global Flash Messages (Hidden during print) -->
+    <div th:replace="~{fragments/layout :: flash-messages}"></div>
+
+    <!-- Receipt Action Bar (Hidden during print) -->
+    <div class="no-print" style="background-color: var(--color-gray-100); border-bottom: 1px solid var(--border-color); padding: 1rem 0;">
+        <div class="container" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.75rem;">
+            <div>
+                <a th:href="@{/donor/dashboard}" style="color: var(--muted-color); font-size: 0.9rem; font-weight: 600;">
+                    &larr; Back to Donor Dashboard
+                </a>
+                <h1 style="font-size: 1.35rem; font-weight: 800; color: var(--dark-color); margin: 0.25rem 0 0 0;">
+                    Official Donation Receipt &amp; Sponsorship Certificate
+                </h1>
+            </div>
+            <div style="display: flex; gap: 0.75rem;">
+                <button type="button" onclick="window.print()" class="btn btn-primary" style="display: inline-flex; align-items: center; gap: 0.5rem; font-weight: 700;">
+                    <span>&#128438;</span> Print / Save as PDF
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Printable Receipt Container -->
+    <main class="main-content" style="padding-top: 2rem; padding-bottom: 3rem;">
+        <div class="receipt-container">
+            <!-- Receipt Header -->
+            <div class="receipt-header">
+                <div>
+                    <div class="receipt-logo">
+                        <span>&#127858;</span> AnnaSetu
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--muted-color); margin-top: 0.25rem;">
+                        Food Donation Slot Booking Platform
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--muted-color);">
+                        Bridging Donors &amp; Charitable Homes Across India
+                    </div>
+                </div>
+                <div style="text-align: right;">
+                    <div style="font-size: 0.85rem; font-weight: 700; color: var(--muted-color); text-transform: uppercase;">
+                        Official Receipt
+                    </div>
+                    <div style="font-size: 1.25rem; font-weight: 800; color: var(--primary-color);" th:text="${receiptNumber}">
+                        ANNA-REC-1-2026
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--dark-light); margin-top: 0.2rem;">
+                        <strong>Date Issued:</strong> <span th:text="${#temporals.format(issueDate, 'MMMM d, yyyy')}">October 12, 2026</span>
+                    </div>
+                    <div style="margin-top: 0.4rem;">
+                        <span th:if="${booking.status.name() == 'CONFIRMED'}" class="badge badge-veg" style="font-size: 0.825rem;">&#10004; CONFIRMED RESERVATION</span>
+                        <span th:if="${booking.status.name() == 'PENDING'}" class="badge" style="background-color: #fef3c7; color: #92400e; font-size: 0.825rem;">PENDING HOST CONFIRMATION</span>
+                        <span th:if="${booking.status.name() == 'COMPLETED'}" class="badge" style="background-color: #e0e7ff; color: #3730a3; font-size: 0.825rem;">&#10004; FULFILLED DONATION</span>
+                        <span th:if="${booking.status.name() == 'CANCELLED'}" class="badge" style="background-color: #f3f4f6; color: #6b7280; font-size: 0.825rem;">CANCELLED</span>
+                        <span th:if="${booking.status.name() == 'REJECTED'}" class="badge badge-nonveg" style="font-size: 0.825rem;">REJECTED</span>
+                    </div>
+                </div>
+            </div>
+
+            <hr style="border: 0; border-top: 2px solid var(--border-color); margin: 1.5rem 0;" />
+
+            <!-- Two Column Parties Overview -->
+            <div class="grid grid-2" style="gap: 2rem; margin-bottom: 2rem;">
+                <!-- Donor Column -->
+                <div style="background-color: #fafaf9; padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--muted-color); font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;">
+                        Sponsored By (Donor Details)
+                    </div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: var(--dark-color);" th:text="${donor.fullName}">
+                        Rahul Sharma
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--dark-light); margin-top: 0.35rem;">
+                        <div><strong>Phone:</strong> <span th:text="${donor.phone}">+91 98111 22233</span></div>
+                        <div><strong>Email:</strong> <span th:text="${donor.user.email}">rahul.sharma@example.com</span></div>
+                        <div><strong>City:</strong> <span th:text="${donor.city}">Mumbai</span></div>
+                    </div>
+                </div>
+
+                <!-- Host Institution Column -->
+                <div style="background-color: #fafaf9; padding: 1.25rem; border-radius: var(--radius-sm); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.75rem; color: var(--muted-color); font-weight: 800; text-transform: uppercase; margin-bottom: 0.5rem;">
+                        Beneficiary Center (Host Organization)
+                    </div>
+                    <div style="font-size: 1.1rem; font-weight: 800; color: var(--dark-color);" th:text="${booking.slot.organization.name}">
+                        Asha Kiran Children Home
+                    </div>
+                    <div style="font-size: 0.875rem; color: var(--dark-light); margin-top: 0.35rem;">
+                        <div><strong>Type:</strong> <span th:text="${booking.slot.organization.type}">ORPHANAGE</span></div>
+                        <div><strong>Address:</strong> <span th:text="${booking.slot.organization.address + ', ' + booking.slot.organization.area + ', ' + booking.slot.organization.city + ' - ' + booking.slot.organization.pincode}">Deccan Gymkhana, Pune</span></div>
+                        <div><strong>Coordinator:</strong> <span th:text="${booking.slot.organization.contactPerson + ' (' + booking.slot.organization.phone + ')'}">Sunita Deshmukh</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Meal Sponsorship Specifics Table -->
+            <table class="receipt-table" style="width: 100%; margin-bottom: 2rem;">
+                <thead>
+                    <tr>
+                        <th style="width: 35%;">Sponsorship Detail</th>
+                        <th>Specifics</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><strong>Scheduled Meal Date &amp; Window</strong></td>
+                        <td>
+                            <strong style="color: var(--primary-color);"
+                                    th:text="${#temporals.format(booking.slot.slotDate, 'EEEE, MMMM d, yyyy')}">Friday, Oct 25, 2026</strong>
+                            &mdash;
+                            <span class="badge" th:text="${booking.slot.mealSlot}">LUNCH</span>
+                            <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;"
+                                  th:if="${booking.slot.mealSlot.name() == 'BREAKFAST'}">(7:30 AM - 9:00 AM)</span>
+                            <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;"
+                                  th:if="${booking.slot.mealSlot.name() == 'LUNCH'}">(12:30 PM - 2:00 PM)</span>
+                            <span style="font-size: 0.825rem; color: var(--muted-color); margin-left: 0.5rem;"
+                                  th:if="${booking.slot.mealSlot.name() == 'DINNER'}">(7:30 PM - 9:00 PM)</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Celebratory Occasion</strong></td>
+                        <td>
+                            <span class="badge" style="background-color: #fef3c7; color: #92400e; font-weight: 700;"
+                                  th:text="${booking.occasion}">BIRTHDAY</span>
+                            <span style="font-size: 0.85rem; color: var(--muted-color); margin-left: 0.5rem;">Dedicated philanthropic celebration</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Estimated Beneficiaries Fed</strong></td>
+                        <td>
+                            <strong th:text="${booking.peopleCount + ' residents'}">65 residents</strong>
+                            <span style="font-size: 0.85rem; color: var(--muted-color);">
+                                (Institution capacity: <span th:text="${booking.slot.organization.peopleServed}">65</span> daily residents)
+                            </span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Kitchen Dietary Standard</strong></td>
+                        <td>
+                            <span class="badge badge-veg" th:text="${booking.slot.organization.foodPreference}">VEG</span>
+                            <span style="font-size: 0.85rem; color: var(--dark-light); margin-left: 0.5rem;">Strict compliance with institutional dietary requirements</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Sponsored Menu Description</strong></td>
+                        <td style="line-height: 1.6;" th:text="${booking.foodDescription}">
+                            Festive vegetarian feast including paneer butter masala, dal tadka, jeera rice, chapati, salad, and gulab jamun.
+                        </td>
+                    </tr>
+                    <tr>
+                        <td><strong>Platform Booking Reference</strong></td>
+                        <td>
+                            <strong th:text="${'#BK-' + booking.id}">#BK-1</strong> &bull;
+                            <span style="font-size: 0.825rem; color: var(--muted-color);"
+                                  th:text="${'Created: ' + (booking.createdAt != null ? #temporals.format(booking.createdAt, 'yyyy-MM-dd HH:mm') : 'N/A')}">2026-10-12 18:30</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Philanthropic Verification Declaration -->
+            <div style="background-color: var(--cream-bg); border-left: 4px solid var(--forest-green); padding: 1.25rem; border-radius: var(--radius-sm); margin-bottom: 2.5rem;">
+                <div style="font-size: 0.9rem; font-weight: 800; color: var(--forest-green); margin-bottom: 0.35rem;">
+                    &#128737; AnnaSetu Philanthropic Verification Guarantee
+                </div>
+                <p style="margin: 0; font-size: 0.85rem; color: var(--dark-light); line-height: 1.55;">
+                    This document certifies that the aforementioned food donation slot has been officially reserved through
+                    AnnaSetu under database-verified concurrency control. The host institution has verified its operational readiness
+                    to prepare, receive, and serve the specified meal to its registered residents.
+                </p>
+            </div>
+
+            <!-- Signatures / Stamps Section -->
+            <div class="receipt-signatures">
+                <div style="text-align: center;">
+                    <div style="font-family: serif; font-size: 1.25rem; color: var(--primary-color); font-weight: 700; margin-bottom: 0.25rem;">
+                        AnnaSetu Platform
+                    </div>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.8rem; color: var(--muted-color); width: 200px;">
+                        Authorized Platform Signature
+                    </div>
+                </div>
+
+                <div style="text-align: center;">
+                    <div style="font-family: serif; font-size: 1.25rem; color: var(--forest-green); font-weight: 700; margin-bottom: 0.25rem;">
+                        <span th:text="${booking.slot.organization.name}">Asha Kiran Home</span>
+                    </div>
+                    <div style="border-top: 1px solid var(--border-color); padding-top: 0.5rem; font-size: 0.8rem; color: var(--muted-color); width: 200px;">
+                        Center Coordinator Acknowledgment
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center; margin-top: 2rem; font-size: 0.75rem; color: var(--muted-color);">
+                AnnaSetu &bull; Non-Profit Food Slot Booking Platform &bull; www.annasetu.org &bull; support@annasetu.org
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer (Hidden during print) -->
+    <footer th:replace="~{fragments/layout :: footer}"></footer>
+
+</body>
+</html>
